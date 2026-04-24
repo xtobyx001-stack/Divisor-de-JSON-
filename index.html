@@ -1,57 +1,57 @@
 <!DOCTYPE html>
 
-<html lang="es">
+<html lang="es" style="background:#0d0d0d!important">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Llega Ya — Divisor de Rutas</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0d0d0d;
-    --surface: #161616;
-    --border: #2a2a2a;
-    --accent: #e8ff47;
-    --accent2: #ff6b35;
-    --text: #f0f0f0;
-    --muted: #666;
-    --card-bg: #1a1a1a;
+  html, body {
+    background-color: #0d0d0d !important;
+    color: #f0f0f0 !important;
+    font-family: 'Syne', sans-serif !important;
+    min-height: 100vh !important;
   }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-- { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-background: var(–bg);
-color: var(–text);
-font-family: ‘Syne’, sans-serif;
-min-height: 100vh;
-padding: 2rem;
-}
+body { padding: 2rem; background-color: #0d0d0d !important; }
 
 header {
 display: flex;
 align-items: flex-end;
 gap: 1.5rem;
 margin-bottom: 3rem;
-border-bottom: 1px solid var(–border);
+border-bottom: 1px solid #2a2a2a;
 padding-bottom: 1.5rem;
 }
 
 .logo {
 font-family: ‘Space Mono’, monospace;
 font-size: 0.65rem;
-color: var(–accent);
+color: #e8ff47 !important;
 letter-spacing: 0.2em;
 text-transform: uppercase;
-border: 1px solid var(–accent);
+border: 1px solid #e8ff47;
 padding: 0.25rem 0.5rem;
+background: #0d0d0d !important;
 }
+
+h1 {
+font-size: clamp(1.8rem, 4vw, 3rem);
+font-weight: 800;
+line-height: 1;
+letter-spacing: -0.03em;
+color: #f0f0f0 !important;
+}
+
+h1 span { color: #e8ff47 !important; }
 
 .btn-reset {
 margin-left: auto;
-background: transparent;
+background: #0d0d0d !important;
 border: 1px solid #3a3a3a;
-color: var(–muted);
+color: #666 !important;
 width: 36px;
 height: 36px;
 border-radius: 50%;
@@ -64,98 +64,45 @@ transition: border-color 0.2s, color 0.2s, transform 0.4s;
 flex-shrink: 0;
 }
 
-.btn-reset:hover {
-border-color: #ff4444;
-color: #ff4444;
-transform: rotate(90deg);
-}
-
+.btn-reset:hover { border-color: #ff4444; color: #ff4444 !important; transform: rotate(90deg); }
 .btn-reset:active { transform: rotate(180deg); }
 
-/* Modal confirm */
 .modal-overlay {
 position: fixed; inset: 0;
-background: rgba(0,0,0,0.75);
+background: rgba(0,0,0,0.8) !important;
 display: flex; align-items: center; justify-content: center;
 z-index: 100;
 opacity: 0; pointer-events: none;
 transition: opacity 0.2s;
 }
-
 .modal-overlay.open { opacity: 1; pointer-events: all; }
 
 .modal {
-background: var(–surface);
+background: #161616 !important;
 border: 1px solid #3a3a3a;
 border-radius: 6px;
 padding: 2rem;
-width: 320px;
+width: 300px;
 text-align: center;
 transform: translateY(10px);
 transition: transform 0.2s;
+color: #f0f0f0 !important;
 }
-
 .modal-overlay.open .modal { transform: translateY(0); }
-
 .modal-icon { font-size: 2rem; margin-bottom: 0.75rem; display: block; }
-
-.modal h3 {
-font-size: 1rem;
-font-weight: 800;
-margin-bottom: 0.4rem;
-}
-
-.modal p {
-font-family: ‘Space Mono’, monospace;
-font-size: 0.7rem;
-color: var(–muted);
-margin-bottom: 1.5rem;
-line-height: 1.6;
-}
-
+.modal h3 { font-size: 1rem; font-weight: 800; margin-bottom: 0.4rem; color: #f0f0f0 !important; }
+.modal p { font-family: ‘Space Mono’, monospace; font-size: 0.7rem; color: #666 !important; margin-bottom: 1.5rem; line-height: 1.6; }
 .modal-actions { display: flex; gap: 0.75rem; }
-
 .modal-actions button {
-flex: 1;
-padding: 0.6rem;
-border-radius: 2px;
-font-family: ‘Space Mono’, monospace;
-font-size: 0.7rem;
-letter-spacing: 0.08em;
-text-transform: uppercase;
-cursor: pointer;
-transition: background 0.15s, color 0.15s;
+flex: 1; padding: 0.6rem; border-radius: 2px;
+font-family: ‘Space Mono’, monospace; font-size: 0.7rem;
+letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
 }
+.btn-cancel { background: #0d0d0d !important; border: 1px solid #2a2a2a; color: #666 !important; }
+.btn-confirm-reset { background: #ff4444 !important; border: 1px solid #ff4444; color: #fff !important; font-weight: 700; }
 
-.btn-cancel {
-background: transparent;
-border: 1px solid var(–border);
-color: var(–muted);
-}
-
-.btn-cancel:hover { border-color: var(–text); color: var(–text); }
-
-.btn-confirm-reset {
-background: #ff4444;
-border: 1px solid #ff4444;
-color: #fff;
-font-weight: 700;
-}
-
-.btn-confirm-reset:hover { background: #cc2222; border-color: #cc2222; }
-
-h1 {
-font-size: clamp(1.8rem, 4vw, 3rem);
-font-weight: 800;
-line-height: 1;
-letter-spacing: -0.03em;
-}
-
-h1 span { color: var(–accent); }
-
-/* UPLOAD ZONE */
 .upload-zone {
-border: 2px dashed var(–border);
+border: 2px dashed #2a2a2a;
 border-radius: 4px;
 padding: 3rem 2rem;
 text-align: center;
@@ -163,282 +110,108 @@ cursor: pointer;
 transition: border-color 0.2s, background 0.2s;
 position: relative;
 margin-bottom: 2rem;
+background: #0d0d0d !important;
 }
+.upload-zone:hover, .upload-zone.drag { border-color: #e8ff47; background: #111 !important; }
+.upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.upload-icon { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; }
+.upload-zone p { font-size: 0.9rem; color: #666 !important; font-family: ‘Space Mono’, monospace; }
+.upload-zone .file-name { margin-top: 0.5rem; color: #e8ff47 !important; font-weight: 700; font-family: ‘Space Mono’, monospace; font-size: 0.8rem; }
 
-.upload-zone:hover, .upload-zone.drag {
-border-color: var(–accent);
-background: rgba(232,255,71,0.03);
-}
+.controls { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2.5rem; flex-wrap: wrap; }
+.control-block { display: flex; flex-direction: column; gap: 0.4rem; }
 
-.upload-zone input {
-position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-}
-
-.upload-icon {
-font-size: 2.5rem;
-margin-bottom: 0.75rem;
-display: block;
-}
-
-.upload-zone p {
-font-size: 0.9rem;
-color: var(–muted);
-font-family: ‘Space Mono’, monospace;
-}
-
-.upload-zone .file-name {
-margin-top: 0.5rem;
-color: var(–accent);
-font-weight: 700;
-font-family: ‘Space Mono’, monospace;
-font-size: 0.8rem;
-}
-
-/* CONTROLS */
-.controls {
-display: flex;
-align-items: center;
-gap: 1.5rem;
-margin-bottom: 2.5rem;
-flex-wrap: wrap;
-}
-
-.control-block {
-display: flex;
-flex-direction: column;
-gap: 0.4rem;
-}
-
-label {
-font-family: ‘Space Mono’, monospace;
-font-size: 0.65rem;
-letter-spacing: 0.15em;
-text-transform: uppercase;
-color: var(–muted);
-}
+label { font-family: ‘Space Mono’, monospace; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: #666 !important; }
 
 input[type=“number”] {
-background: var(–surface);
-border: 1px solid var(–border);
-color: var(–text);
+background: #161616 !important;
+border: 1px solid #2a2a2a;
+color: #f0f0f0 !important;
 font-family: ‘Space Mono’, monospace;
-font-size: 1.4rem;
-font-weight: 700;
-padding: 0.5rem 1rem;
-width: 100px;
-border-radius: 2px;
-outline: none;
-transition: border-color 0.2s;
+font-size: 1.4rem; font-weight: 700;
+padding: 0.5rem 1rem; width: 100px;
+border-radius: 2px; outline: none;
 }
-
-input[type=“number”]:focus { border-color: var(–accent); }
+input[type=“number”]:focus { border-color: #e8ff47; }
 
 .stat-pill {
-background: var(–surface);
-border: 1px solid var(–border);
-padding: 0.5rem 1rem;
-border-radius: 2px;
-font-family: ‘Space Mono’, monospace;
-font-size: 0.75rem;
-color: var(–muted);
+background: #161616 !important;
+border: 1px solid #2a2a2a;
+padding: 0.5rem 1rem; border-radius: 2px;
+font-family: ‘Space Mono’, monospace; font-size: 0.75rem; color: #666 !important;
 }
-
-.stat-pill strong { color: var(–accent); font-size: 1.1rem; }
+.stat-pill strong { color: #e8ff47 !important; font-size: 1.1rem; }
 
 .btn-divide {
-background: var(–accent);
-color: #000;
-border: none;
-padding: 0.75rem 2rem;
-font-family: ‘Syne’, sans-serif;
-font-weight: 800;
-font-size: 0.9rem;
-letter-spacing: 0.05em;
-cursor: pointer;
-border-radius: 2px;
-transition: transform 0.1s, background 0.2s;
-margin-left: auto;
+background: #e8ff47 !important;
+color: #000 !important;
+border: none; padding: 0.75rem 2rem;
+font-family: ‘Syne’, sans-serif; font-weight: 800; font-size: 0.9rem;
+letter-spacing: 0.05em; cursor: pointer; border-radius: 2px;
+transition: transform 0.1s; margin-left: auto;
 }
+.btn-divide:hover { background: #d4e83a !important; transform: translateY(-1px); }
+.btn-divide:disabled { opacity: 0.3; cursor: not-allowed; }
 
-.btn-divide:hover { background: #d4e83a; transform: translateY(-1px); }
-.btn-divide:active { transform: translateY(0); }
-.btn-divide:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
-
-/* RESULTS */
-.results-header {
-display: flex;
-align-items: center;
-justify-content: space-between;
-margin-bottom: 1.5rem;
-}
-
-.results-header h2 {
-font-size: 1rem;
-font-weight: 700;
-font-family: ‘Space Mono’, monospace;
-color: var(–muted);
-letter-spacing: 0.1em;
-text-transform: uppercase;
-}
+.results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+.results-header h2 { font-size: 1rem; font-weight: 700; font-family: ‘Space Mono’, monospace; color: #666 !important; letter-spacing: 0.1em; text-transform: uppercase; }
 
 .btn-download-all {
-background: transparent;
-border: 1px solid var(–accent2);
-color: var(–accent2);
-padding: 0.4rem 1rem;
-font-family: ‘Space Mono’, monospace;
-font-size: 0.7rem;
-cursor: pointer;
-border-radius: 2px;
-letter-spacing: 0.1em;
-text-transform: uppercase;
-transition: background 0.2s, color 0.2s;
+background: #0d0d0d !important;
+border: 1px solid #ff6b35; color: #ff6b35 !important;
+padding: 0.4rem 1rem; font-family: ‘Space Mono’, monospace; font-size: 0.7rem;
+cursor: pointer; border-radius: 2px; letter-spacing: 0.1em; text-transform: uppercase;
 }
+.btn-download-all:hover { background: #ff6b35 !important; color: #000 !important; }
 
-.btn-download-all:hover { background: var(–accent2); color: #000; }
-
-.grid {
-display: grid;
-grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-gap: 1rem;
-}
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
 
 .column-card {
-background: var(–card-bg);
-border: 1px solid var(–border);
-border-radius: 4px;
-overflow: hidden;
+background: #1a1a1a !important;
+border: 1px solid #2a2a2a; border-radius: 4px; overflow: hidden;
 animation: slideUp 0.3s ease both;
 }
-
-@keyframes slideUp {
-from { opacity: 0; transform: translateY(12px); }
-to   { opacity: 1; transform: translateY(0); }
-}
-
-.column-card:nth-child(1) { animation-delay: 0s; }
-.column-card:nth-child(2) { animation-delay: 0.05s; }
-.column-card:nth-child(3) { animation-delay: 0.1s; }
-.column-card:nth-child(4) { animation-delay: 0.15s; }
-.column-card:nth-child(5) { animation-delay: 0.2s; }
+@keyframes slideUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
 
 .card-header {
-background: var(–surface);
-padding: 0.75rem 1rem;
-display: flex;
-align-items: center;
-justify-content: space-between;
-border-bottom: 1px solid var(–border);
+background: #161616 !important;
+padding: 0.75rem 1rem; display: flex; align-items: center;
+justify-content: space-between; border-bottom: 1px solid #2a2a2a;
 }
+.card-title { font-family: ‘Space Mono’, monospace; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #f0f0f0 !important; }
+.card-badge { background: #e8ff47 !important; color: #000 !important; font-family: ‘Space Mono’, monospace; font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 2px; }
 
-.card-title {
-font-family: ‘Space Mono’, monospace;
-font-size: 0.75rem;
-font-weight: 700;
-letter-spacing: 0.1em;
-text-transform: uppercase;
-}
-
-.card-badge {
-background: var(–accent);
-color: #000;
-font-family: ‘Space Mono’, monospace;
-font-size: 0.7rem;
-font-weight: 700;
-padding: 0.15rem 0.5rem;
-border-radius: 2px;
-}
-
-.card-body {
-padding: 0.75rem 1rem;
-max-height: 240px;
-overflow-y: auto;
-scrollbar-width: thin;
-scrollbar-color: var(–border) transparent;
-}
-
-.cliente-row {
-display: flex;
-align-items: center;
-gap: 0.75rem;
-padding: 0.45rem 0;
-border-bottom: 1px solid var(–border);
-font-size: 0.8rem;
-}
-
+.card-body { padding: 0.75rem 1rem; max-height: 240px; overflow-y: auto; background: #1a1a1a !important; }
+.cliente-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.45rem 0; border-bottom: 1px solid #2a2a2a; font-size: 0.8rem; }
 .cliente-row:last-child { border-bottom: none; }
+.cliente-id { font-family: ‘Space Mono’, monospace; color: #e8ff47 !important; font-size: 0.65rem; min-width: 28px; text-align: right; }
+.cliente-nombre { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #f0f0f0 !important; }
+.cliente-tel { font-family: ‘Space Mono’, monospace; font-size: 0.62rem; color: #666 !important; }
 
-.cliente-id {
-font-family: ‘Space Mono’, monospace;
-color: var(–accent);
-font-size: 0.65rem;
-min-width: 28px;
-text-align: right;
-}
-
-.cliente-nombre {
-flex: 1;
-white-space: nowrap;
-overflow: hidden;
-text-overflow: ellipsis;
-}
-
-.cliente-tel {
-font-family: ‘Space Mono’, monospace;
-font-size: 0.62rem;
-color: var(–muted);
-}
-
-.card-footer {
-padding: 0.75rem 1rem;
-border-top: 1px solid var(–border);
-}
-
+.card-footer { padding: 0.75rem 1rem; border-top: 1px solid #2a2a2a; background: #1a1a1a !important; }
 .btn-download {
-width: 100%;
-background: transparent;
-border: 1px solid var(–border);
-color: var(–text);
-padding: 0.5rem;
-font-family: ‘Space Mono’, monospace;
-font-size: 0.7rem;
-cursor: pointer;
-border-radius: 2px;
-letter-spacing: 0.08em;
-text-transform: uppercase;
-transition: border-color 0.2s, color 0.2s, background 0.2s;
-display: flex;
-align-items: center;
-justify-content: center;
-gap: 0.5rem;
+width: 100%; background: #1a1a1a !important;
+border: 1px solid #2a2a2a; color: #f0f0f0 !important;
+padding: 0.5rem; font-family: ‘Space Mono’, monospace; font-size: 0.7rem;
+cursor: pointer; border-radius: 2px; letter-spacing: 0.08em; text-transform: uppercase;
+display: flex; align-items: center; justify-content: center; gap: 0.5rem;
 }
+.btn-download:hover { border-color: #e8ff47 !important; color: #e8ff47 !important; }
 
-.btn-download:hover { border-color: var(–accent); color: var(–accent); background: rgba(232,255,71,0.04); }
-
-/* EMPTY */
 .empty {
-text-align: center;
-padding: 4rem 2rem;
-color: var(–muted);
-font-family: ‘Space Mono’, monospace;
-font-size: 0.8rem;
-border: 1px dashed var(–border);
-border-radius: 4px;
+text-align: center; padding: 4rem 2rem; color: #666 !important;
+font-family: ‘Space Mono’, monospace; font-size: 0.8rem;
+border: 1px dashed #2a2a2a; border-radius: 4px;
+background: #0d0d0d !important;
 }
-
 .empty .big { font-size: 2rem; margin-bottom: 1rem; display: block; }
 
-/* ALERT */
 .alert {
-background: rgba(255,107,53,0.1);
-border: 1px solid var(–accent2);
-color: var(–accent2);
-padding: 0.75rem 1rem;
-border-radius: 2px;
-font-family: ‘Space Mono’, monospace;
-font-size: 0.75rem;
-margin-bottom: 1.5rem;
-display: none;
+background: rgba(255,107,53,0.1) !important;
+border: 1px solid #ff6b35; color: #ff6b35 !important;
+padding: 0.75rem 1rem; border-radius: 2px;
+font-family: ‘Space Mono’, monospace; font-size: 0.75rem;
+margin-bottom: 1.5rem; display: none;
 }
 </style>
 
@@ -517,7 +290,6 @@ display: none;
   const resultsHeader = document.getElementById('resultsHeader');
   const btnDownloadAll = document.getElementById('btnDownloadAll');
 
-  /* ---- Drag & drop ---- */
   dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
   dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
   dropZone.addEventListener('drop', e => {
@@ -533,7 +305,6 @@ display: none;
     reader.onload = e => {
       try {
         const json = JSON.parse(e.target.result);
-        // Detectar la clave principal (clientes u otra)
         const keys = Object.keys(json);
         const key  = keys.find(k => Array.isArray(json[k])) || null;
         clientes = key ? json[key] : (Array.isArray(json) ? json : []);
@@ -559,15 +330,10 @@ display: none;
     if (!clientes.length) return;
     const base = Math.floor(clientes.length / n);
     const resto = clientes.length % n;
-    if (resto === 0) {
-      porColumna.textContent = base;
-    } else {
-      porColumna.textContent = `${base}–${base+1}`;
-    }
+    porColumna.textContent = resto === 0 ? base : `${base}–${base+1}`;
     statPor.style.display = 'flex';
   }
 
-  /* ---- Dividir ---- */
   btnDivide.addEventListener('click', dividir);
 
   function dividir() {
@@ -582,7 +348,6 @@ display: none;
     renderColumnas(columnas);
   }
 
-  /* Distribución balanceada: los primeros "resto" grupos tienen un elemento extra */
   function distribuir(arr, n) {
     const base  = Math.floor(arr.length / n);
     const extra = arr.length % n;
@@ -597,29 +362,24 @@ display: none;
     return cols;
   }
 
-  /* ---- Render ---- */
   function renderColumnas(cols) {
     resultsHeader.style.display = cols.length ? 'flex' : 'none';
     if (!cols.length) {
       results.innerHTML = '<div class="empty"><span class="big">⚡</span>Carga un JSON y define el número de divisiones</div>';
       return;
     }
-
     results.innerHTML = '<div class="grid" id="grid"></div>';
     const grid = document.getElementById('grid');
-
     cols.forEach((col, i) => {
       const card = document.createElement('div');
       card.className = 'column-card';
       card.style.animationDelay = `${i * 0.05}s`;
-
       const rows = col.map(c => `
         <div class="cliente-row">
           <span class="cliente-id">#${c.id ?? i+1}</span>
           <span class="cliente-nombre">${c.nombre ?? c.name ?? '—'}</span>
           <span class="cliente-tel">${c.telefono ?? c.phone ?? ''}</span>
         </div>`).join('');
-
       card.innerHTML = `
         <div class="card-header">
           <span class="card-title">Columna ${i + 1}</span>
@@ -627,45 +387,33 @@ display: none;
         </div>
         <div class="card-body">${rows}</div>
         <div class="card-footer">
-          <button class="btn-download" onclick="descargar(${i})">
-            ↓ Descargar columna ${i + 1}
-          </button>
+          <button class="btn-download" onclick="descargar(${i})">↓ Descargar columna ${i + 1}</button>
         </div>`;
       grid.appendChild(card);
     });
   }
 
-  /* ---- Descarga individual ---- */
   function descargar(i) {
-    const col = columnas[i];
-    // Mismo formato que el original: objeto con clave "clientes"
-    const payload = { clientes: col };
+    const payload = { clientes: columnas[i] };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
-    a.href     = url;
-    a.download = `${fileName}_columna_${i + 1}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    a.href = url; a.download = `${fileName}_columna_${i + 1}.json`;
+    a.click(); URL.revokeObjectURL(url);
   }
 
-  /* ---- Descargar todo ---- */
   btnDownloadAll.addEventListener('click', () => {
-    columnas.forEach((_, i) => {
-      setTimeout(() => descargar(i), i * 300);
-    });
+    columnas.forEach((_, i) => setTimeout(() => descargar(i), i * 300));
   });
 
-  /* ---- Alert ---- */
   function showAlert(msg) {
     alert.textContent = msg;
     alert.style.display = msg ? 'block' : 'none';
   }
 
-  /* ---- Reset ---- */
-  const btnReset      = document.getElementById('btnReset');
-  const modalOverlay  = document.getElementById('modalOverlay');
-  const btnCancel     = document.getElementById('btnCancel');
+  const btnReset = document.getElementById('btnReset');
+  const modalOverlay = document.getElementById('modalOverlay');
+  const btnCancel = document.getElementById('btnCancel');
   const btnConfirmReset = document.getElementById('btnConfirmReset');
 
   btnReset.addEventListener('click', () => modalOverlay.classList.add('open'));
@@ -673,24 +421,14 @@ display: none;
   modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) modalOverlay.classList.remove('open'); });
 
   btnConfirmReset.addEventListener('click', () => {
-    // Reset estado
-    clientes = [];
-    columnas = [];
-    fileName = 'llega_ya';
-
-    // Reset UI
-    fileInput.value = '';
-    fileNameEl.textContent = '';
+    clientes = []; columnas = []; fileName = 'llega_ya';
+    fileInput.value = ''; fileNameEl.textContent = '';
     numDivisions.value = 2;
-    statTotal.style.display = 'none';
-    statPor.style.display = 'none';
-    totalCount.textContent = '0';
-    porColumna.textContent = '—';
-    btnDivide.disabled = true;
-    resultsHeader.style.display = 'none';
+    statTotal.style.display = 'none'; statPor.style.display = 'none';
+    totalCount.textContent = '0'; porColumna.textContent = '—';
+    btnDivide.disabled = true; resultsHeader.style.display = 'none';
     showAlert('');
     results.innerHTML = '<div class="empty"><span class="big">⚡</span>Carga un JSON y define el número de divisiones</div>';
-
     modalOverlay.classList.remove('open');
   });
 </script>
