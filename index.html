@@ -213,6 +213,33 @@ padding: 0.75rem 1rem; border-radius: 2px;
 font-family: ‘Space Mono’, monospace; font-size: 0.75rem;
 margin-bottom: 1.5rem; display: none;
 }
+.input-nombre {
+width: 100%;
+background: #0d0d0d !important;
+border: 1px solid #e8ff47;
+color: #f0f0f0 !important;
+font-family: ‘Space Mono’, monospace;
+font-size: 0.85rem;
+padding: 0.6rem 0.75rem;
+border-radius: 2px;
+outline: none;
+margin-bottom: 1rem;
+}
+.ext-label {
+font-family: ‘Space Mono’, monospace;
+font-size: 0.65rem;
+color: #666 !important;
+margin-bottom: 0.5rem;
+display: block;
+text-align: left;
+}
+.btn-confirm-dl {
+background: #e8ff47 !important;
+border: 1px solid #e8ff47;
+color: #000 !important;
+font-weight: 700;
+}
+.btn-confirm-dl:hover { background: #d4e83a !important; }
 </style>
 
 </head>
@@ -232,6 +259,19 @@ margin-bottom: 1.5rem; display: none;
     <div class="modal-actions">
       <button class="btn-cancel" id="btnCancel">Cancelar</button>
       <button class="btn-confirm-reset" id="btnConfirmReset">Limpiar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalRename">
+  <div class="modal">
+    <span class="modal-icon">✏️</span>
+    <h3>Nombre del archivo</h3>
+    <span class="ext-label">Escribe el nombre (sin .json)</span>
+    <input class="input-nombre" type="text" id="inputNombre" placeholder="mi_ruta_columna_1">
+    <div class="modal-actions">
+      <button class="btn-cancel" id="btnCancelRename">Cancelar</button>
+      <button class="btn-confirm-dl" id="btnConfirmDl">↓ Descargar</button>
     </div>
   </div>
 </div>
@@ -393,17 +433,52 @@ margin-bottom: 1.5rem; display: none;
     });
   }
 
+  let descargaIndex = -1;
+
   function descargar(i) {
+    descargaIndex = i;
+    const inputNombre = document.getElementById('inputNombre');
+    inputNombre.value = `${fileName}_columna_${i + 1}`;
+    document.getElementById('modalRename').classList.add('open');
+    setTimeout(() => inputNombre.select(), 100);
+  }
+
+  function ejecutarDescarga(nombreFinal) {
+    const i = descargaIndex;
     const payload = { clientes: columnas[i] };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
-    a.href = url; a.download = `${fileName}_columna_${i + 1}.json`;
-    a.click(); URL.revokeObjectURL(url);
+    a.href = url;
+    a.download = `${nombreFinal}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
+  document.getElementById('btnConfirmDl').addEventListener('click', () => {
+    const nombre = document.getElementById('inputNombre').value.trim() || `${fileName}_columna_${descargaIndex + 1}`;
+    ejecutarDescarga(nombre);
+    document.getElementById('modalRename').classList.remove('open');
+  });
+
+  document.getElementById('btnCancelRename').addEventListener('click', () => {
+    document.getElementById('modalRename').classList.remove('open');
+  });
+
+  document.getElementById('inputNombre').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('btnConfirmDl').click();
+    if (e.key === 'Escape') document.getElementById('modalRename').classList.remove('open');
+  });
+
   btnDownloadAll.addEventListener('click', () => {
-    columnas.forEach((_, i) => setTimeout(() => descargar(i), i * 300));
+    columnas.forEach((_, i) => setTimeout(() => {
+      const payload = { clientes: columnas[i] };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = `${fileName}_columna_${i + 1}.json`;
+      a.click(); URL.revokeObjectURL(url);
+    }, i * 300));
   });
 
   function showAlert(msg) {
