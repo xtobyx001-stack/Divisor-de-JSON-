@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Llega Ya — Divisor de Rutas</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --border: #2a2a2a;
+    --accent: #e8ff47;
+    --accent2: #ff6b35;
+    --text: #f0f0f0;
+    --muted: #666;
+    --card-bg: #1a1a1a;
+  }
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: ‘Syne’, sans-serif;
+min-height: 100vh;
+padding: 2rem;
+}
+
+header {
+display: flex;
+align-items: flex-end;
+gap: 1.5rem;
+margin-bottom: 3rem;
+border-bottom: 1px solid var(–border);
+padding-bottom: 1.5rem;
+}
+
+.logo {
+font-family: ‘Space Mono’, monospace;
+font-size: 0.65rem;
+color: var(–accent);
+letter-spacing: 0.2em;
+text-transform: uppercase;
+border: 1px solid var(–accent);
+padding: 0.25rem 0.5rem;
+}
+
+.btn-reset {
+margin-left: auto;
+background: transparent;
+border: 1px solid #3a3a3a;
+color: var(–muted);
+width: 36px;
+height: 36px;
+border-radius: 50%;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 1.1rem;
+transition: border-color 0.2s, color 0.2s, transform 0.4s;
+flex-shrink: 0;
+}
+
+.btn-reset:hover {
+border-color: #ff4444;
+color: #ff4444;
+transform: rotate(90deg);
+}
+
+.btn-reset:active { transform: rotate(180deg); }
+
+/* Modal confirm */
+.modal-overlay {
+position: fixed; inset: 0;
+background: rgba(0,0,0,0.75);
+display: flex; align-items: center; justify-content: center;
+z-index: 100;
+opacity: 0; pointer-events: none;
+transition: opacity 0.2s;
+}
+
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.modal {
+background: var(–surface);
+border: 1px solid #3a3a3a;
+border-radius: 6px;
+padding: 2rem;
+width: 320px;
+text-align: center;
+transform: translateY(10px);
+transition: transform 0.2s;
+}
+
+.modal-overlay.open .modal { transform: translateY(0); }
+
+.modal-icon { font-size: 2rem; margin-bottom: 0.75rem; display: block; }
+
+.modal h3 {
+font-size: 1rem;
+font-weight: 800;
+margin-bottom: 0.4rem;
+}
+
+.modal p {
+font-family: ‘Space Mono’, monospace;
+font-size: 0.7rem;
+color: var(–muted);
+margin-bottom: 1.5rem;
+line-height: 1.6;
+}
+
+.modal-actions { display: flex; gap: 0.75rem; }
+
+.modal-actions button {
+flex: 1;
+padding: 0.6rem;
+border-radius: 2px;
+font-family: ‘Space Mono’, monospace;
+font-size: 0.7rem;
+letter-spacing: 0.08em;
+text-transform: uppercase;
+cursor: pointer;
+transition: background 0.15s, color 0.15s;
+}
+
+.btn-cancel {
+background: transparent;
+border: 1px solid var(–border);
+color: var(–muted);
+}
+
+.btn-cancel:hover { border-color: var(–text); color: var(–text); }
+
+.btn-confirm-reset {
+background: #ff4444;
+border: 1px solid #ff4444;
+color: #fff;
+font-weight: 700;
+}
+
+.btn-confirm-reset:hover { background: #cc2222; border-color: #cc2222; }
+
+h1 {
+font-size: clamp(1.8rem, 4vw, 3rem);
+font-weight: 800;
+line-height: 1;
+letter-spacing: -0.03em;
+}
+
+h1 span { color: var(–accent); }
+
+/* UPLOAD ZONE */
+.upload-zone {
+border: 2px dashed var(–border);
+border-radius: 4px;
+padding: 3rem 2rem;
+text-align: center;
+cursor: pointer;
+transition: border-color 0.2s, background 0.2s;
+position: relative;
+margin-bottom: 2rem;
+}
+
+.upload-zone:hover, .upload-zone.drag {
+border-color: var(–accent);
+background: rgba(232,255,71,0.03);
+}
+
+.upload-zone input {
+position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+
+.upload-icon {
+font-size: 2.5rem;
+margin-bottom: 0.75rem;
+display: block;
+}
+
+.upload-zone p {
+font-size: 0.9rem;
+color: var(–muted);
+font-family: ‘Space Mono’, monospace;
+}
+
+.upload-zone .file-name {
+margin-top: 0.5rem;
+color: var(–accent);
+font-weight: 700;
+font-family: ‘Space Mono’, monospace;
+font-size: 0.8rem;
+}
+
+/* CONTROLS */
+.controls {
+display: flex;
+align-items: center;
+gap: 1.5rem;
+margin-bottom: 2.5rem;
+flex-wrap: wrap;
+}
+
+.control-block {
+display: flex;
+flex-direction: column;
+gap: 0.4rem;
+}
+
+label {
+font-family: ‘Space Mono’, monospace;
+font-size: 0.65rem;
+letter-spacing: 0.15em;
+text-transform: uppercase;
+color: var(–muted);
+}
+
+input[type=“number”] {
+background: var(–surface);
+border: 1px solid var(–border);
+color: var(–text);
+font-family: ‘Space Mono’, monospace;
+font-size: 1.4rem;
+font-weight: 700;
+padding: 0.5rem 1rem;
+width: 100px;
+border-radius: 2px;
+outline: none;
+transition: border-color 0.2s;
+}
+
+input[type=“number”]:focus { border-color: var(–accent); }
+
+.stat-pill {
+background: var(–surface);
+border: 1px solid var(–border);
+padding: 0.5rem 1rem;
+border-radius: 2px;
+font-family: ‘Space Mono’, monospace;
+font-size: 0.75rem;
+color: var(–muted);
+}
+
+.stat-pill strong { color: var(–accent); font-size: 1.1rem; }
+
+.btn-divide {
+background: var(–accent);
+color: #000;
+border: none;
+padding: 0.75rem 2rem;
+font-family: ‘Syne’, sans-serif;
+font-weight: 800;
+font-size: 0.9rem;
+letter-spacing: 0.05em;
+cursor: pointer;
+border-radius: 2px;
+transition: transform 0.1s, background 0.2s;
+margin-left: auto;
+}
+
+.btn-divide:hover { background: #d4e83a; transform: translateY(-1px); }
+.btn-divide:active { transform: translateY(0); }
+.btn-divide:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+/* RESULTS */
+.results-header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+margin-bottom: 1.5rem;
+}
+
+.results-header h2 {
+font-size: 1rem;
+font-weight: 700;
+font-family: ‘Space Mono’, monospace;
+color: var(–muted);
+letter-spacing: 0.1em;
+text-transform: uppercase;
+}
+
+.btn-download-all {
+background: transparent;
+border: 1px solid var(–accent2);
+color: var(–accent2);
+padding: 0.4rem 1rem;
+font-family: ‘Space Mono’, monospace;
+font-size: 0.7rem;
+cursor: pointer;
+border-radius: 2px;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+transition: background 0.2s, color 0.2s;
+}
+
+.btn-download-all:hover { background: var(–accent2); color: #000; }
+
+.grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+gap: 1rem;
+}
+
+.column-card {
+background: var(–card-bg);
+border: 1px solid var(–border);
+border-radius: 4px;
+overflow: hidden;
+animation: slideUp 0.3s ease both;
+}
+
+@keyframes slideUp {
+from { opacity: 0; transform: translateY(12px); }
+to   { opacity: 1; transform: translateY(0); }
+}
+
+.column-card:nth-child(1) { animation-delay: 0s; }
+.column-card:nth-child(2) { animation-delay: 0.05s; }
+.column-card:nth-child(3) { animation-delay: 0.1s; }
+.column-card:nth-child(4) { animation-delay: 0.15s; }
+.column-card:nth-child(5) { animation-delay: 0.2s; }
+
+.card-header {
+background: var(–surface);
+padding: 0.75rem 1rem;
+display: flex;
+align-items: center;
+justify-content: space-between;
+border-bottom: 1px solid var(–border);
+}
+
+.card-title {
+font-family: ‘Space Mono’, monospace;
+font-size: 0.75rem;
+font-weight: 700;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+}
+
+.card-badge {
+background: var(–accent);
+color: #000;
+font-family: ‘Space Mono’, monospace;
+font-size: 0.7rem;
+font-weight: 700;
+padding: 0.15rem 0.5rem;
+border-radius: 2px;
+}
+
+.card-body {
+padding: 0.75rem 1rem;
+max-height: 240px;
+overflow-y: auto;
+scrollbar-width: thin;
+scrollbar-color: var(–border) transparent;
+}
+
+.cliente-row {
+display: flex;
+align-items: center;
+gap: 0.75rem;
+padding: 0.45rem 0;
+border-bottom: 1px solid var(–border);
+font-size: 0.8rem;
+}
+
+.cliente-row:last-child { border-bottom: none; }
+
+.cliente-id {
+font-family: ‘Space Mono’, monospace;
+color: var(–accent);
+font-size: 0.65rem;
+min-width: 28px;
+text-align: right;
+}
+
+.cliente-nombre {
+flex: 1;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+
+.cliente-tel {
+font-family: ‘Space Mono’, monospace;
+font-size: 0.62rem;
+color: var(–muted);
+}
+
+.card-footer {
+padding: 0.75rem 1rem;
+border-top: 1px solid var(–border);
+}
+
+.btn-download {
+width: 100%;
+background: transparent;
+border: 1px solid var(–border);
+color: var(–text);
+padding: 0.5rem;
+font-family: ‘Space Mono’, monospace;
+font-size: 0.7rem;
+cursor: pointer;
+border-radius: 2px;
+letter-spacing: 0.08em;
+text-transform: uppercase;
+transition: border-color 0.2s, color 0.2s, background 0.2s;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 0.5rem;
+}
+
+.btn-download:hover { border-color: var(–accent); color: var(–accent); background: rgba(232,255,71,0.04); }
+
+/* EMPTY */
+.empty {
+text-align: center;
+padding: 4rem 2rem;
+color: var(–muted);
+font-family: ‘Space Mono’, monospace;
+font-size: 0.8rem;
+border: 1px dashed var(–border);
+border-radius: 4px;
+}
+
+.empty .big { font-size: 2rem; margin-bottom: 1rem; display: block; }
+
+/* ALERT */
+.alert {
+background: rgba(255,107,53,0.1);
+border: 1px solid var(–accent2);
+color: var(–accent2);
+padding: 0.75rem 1rem;
+border-radius: 2px;
+font-family: ‘Space Mono’, monospace;
+font-size: 0.75rem;
+margin-bottom: 1.5rem;
+display: none;
+}
+</style>
+
+</head>
+<body>
+
+<header>
+  <div class="logo">Llega Ya</div>
+  <h1>Divisor de <span>Rutas</span></h1>
+  <button class="btn-reset" id="btnReset" title="Limpiar todo">⚙</button>
+</header>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <span class="modal-icon">🗑</span>
+    <h3>Limpiar sesión</h3>
+    <p>Se eliminará el archivo cargado y todas las columnas generadas. ¿Continuar?</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="btnCancel">Cancelar</button>
+      <button class="btn-confirm-reset" id="btnConfirmReset">Limpiar</button>
+    </div>
+  </div>
+</div>
+
+<div class="upload-zone" id="dropZone">
+  <input type="file" id="fileInput" accept=".json">
+  <span class="upload-icon">📂</span>
+  <p>Arrastra tu archivo JSON o haz clic para seleccionar</p>
+  <div class="file-name" id="fileName"></div>
+</div>
+
+<div class="alert" id="alert"></div>
+
+<div class="controls">
+  <div class="control-block">
+    <label>Divisiones</label>
+    <input type="number" id="numDivisions" value="2" min="1" max="100">
+  </div>
+  <div class="stat-pill" id="statTotal" style="display:none">
+    Total clientes: <strong id="totalCount">0</strong>
+  </div>
+  <div class="stat-pill" id="statPor" style="display:none">
+    Por columna: <strong id="porColumna">—</strong>
+  </div>
+  <button class="btn-divide" id="btnDivide" disabled>Dividir →</button>
+</div>
+
+<div id="resultsHeader" class="results-header" style="display:none">
+  <h2>Columnas generadas</h2>
+  <button class="btn-download-all" id="btnDownloadAll">↓ Descargar todo</button>
+</div>
+
+<div id="results">
+  <div class="empty">
+    <span class="big">⚡</span>
+    Carga un JSON y define el número de divisiones
+  </div>
+</div>
+
+<script>
+  let clientes = [];
+  let fileName = 'llega_ya';
+  let columnas = [];
+
+  const fileInput = document.getElementById('fileInput');
+  const dropZone  = document.getElementById('dropZone');
+  const fileNameEl = document.getElementById('fileName');
+  const numDivisions = document.getElementById('numDivisions');
+  const btnDivide = document.getElementById('btnDivide');
+  const results   = document.getElementById('results');
+  const alert     = document.getElementById('alert');
+  const statTotal = document.getElementById('statTotal');
+  const statPor   = document.getElementById('statPor');
+  const totalCount = document.getElementById('totalCount');
+  const porColumna = document.getElementById('porColumna');
+  const resultsHeader = document.getElementById('resultsHeader');
+  const btnDownloadAll = document.getElementById('btnDownloadAll');
+
+  /* ---- Drag & drop ---- */
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('drag');
+    const file = e.dataTransfer.files[0];
+    if (file) processFile(file);
+  });
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) processFile(fileInput.files[0]); });
+
+  function processFile(file) {
+    fileName = file.name.replace('.json', '');
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const json = JSON.parse(e.target.result);
+        // Detectar la clave principal (clientes u otra)
+        const keys = Object.keys(json);
+        const key  = keys.find(k => Array.isArray(json[k])) || null;
+        clientes = key ? json[key] : (Array.isArray(json) ? json : []);
+        if (!clientes.length) throw new Error('Sin datos');
+        fileNameEl.textContent = `✓ ${file.name} — ${clientes.length} clientes`;
+        statTotal.style.display = 'flex';
+        totalCount.textContent  = clientes.length;
+        btnDivide.disabled = false;
+        showAlert('');
+        updatePreview();
+      } catch(err) {
+        showAlert('Error al leer el JSON. Verifica el formato.');
+        btnDivide.disabled = true;
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  numDivisions.addEventListener('input', updatePreview);
+
+  function updatePreview() {
+    const n = parseInt(numDivisions.value) || 1;
+    if (!clientes.length) return;
+    const base = Math.floor(clientes.length / n);
+    const resto = clientes.length % n;
+    if (resto === 0) {
+      porColumna.textContent = base;
+    } else {
+      porColumna.textContent = `${base}–${base+1}`;
+    }
+    statPor.style.display = 'flex';
+  }
+
+  /* ---- Dividir ---- */
+  btnDivide.addEventListener('click', dividir);
+
+  function dividir() {
+    const n = Math.max(1, parseInt(numDivisions.value) || 1);
+    const total = clientes.length;
+    if (n > total) {
+      showAlert(`No puedes dividir ${total} clientes en ${n} columnas. Usa máximo ${total}.`);
+      return;
+    }
+    showAlert('');
+    columnas = distribuir(clientes, n);
+    renderColumnas(columnas);
+  }
+
+  /* Distribución balanceada: los primeros "resto" grupos tienen un elemento extra */
+  function distribuir(arr, n) {
+    const base  = Math.floor(arr.length / n);
+    const extra = arr.length % n;
+    const cols  = [];
+    let idx = 0;
+    for (let i = 0; i < n; i++) {
+      const size = base + (i < extra ? 1 : 0);
+      if (size === 0) break;
+      cols.push(arr.slice(idx, idx + size));
+      idx += size;
+    }
+    return cols;
+  }
+
+  /* ---- Render ---- */
+  function renderColumnas(cols) {
+    resultsHeader.style.display = cols.length ? 'flex' : 'none';
+    if (!cols.length) {
+      results.innerHTML = '<div class="empty"><span class="big">⚡</span>Carga un JSON y define el número de divisiones</div>';
+      return;
+    }
+
+    results.innerHTML = '<div class="grid" id="grid"></div>';
+    const grid = document.getElementById('grid');
+
+    cols.forEach((col, i) => {
+      const card = document.createElement('div');
+      card.className = 'column-card';
+      card.style.animationDelay = `${i * 0.05}s`;
+
+      const rows = col.map(c => `
+        <div class="cliente-row">
+          <span class="cliente-id">#${c.id ?? i+1}</span>
+          <span class="cliente-nombre">${c.nombre ?? c.name ?? '—'}</span>
+          <span class="cliente-tel">${c.telefono ?? c.phone ?? ''}</span>
+        </div>`).join('');
+
+      card.innerHTML = `
+        <div class="card-header">
+          <span class="card-title">Columna ${i + 1}</span>
+          <span class="card-badge">${col.length} clientes</span>
+        </div>
+        <div class="card-body">${rows}</div>
+        <div class="card-footer">
+          <button class="btn-download" onclick="descargar(${i})">
+            ↓ Descargar columna ${i + 1}
+          </button>
+        </div>`;
+      grid.appendChild(card);
+    });
+  }
+
+  /* ---- Descarga individual ---- */
+  function descargar(i) {
+    const col = columnas[i];
+    // Mismo formato que el original: objeto con clave "clientes"
+    const payload = { clientes: col };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `${fileName}_columna_${i + 1}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  /* ---- Descargar todo ---- */
+  btnDownloadAll.addEventListener('click', () => {
+    columnas.forEach((_, i) => {
+      setTimeout(() => descargar(i), i * 300);
+    });
+  });
+
+  /* ---- Alert ---- */
+  function showAlert(msg) {
+    alert.textContent = msg;
+    alert.style.display = msg ? 'block' : 'none';
+  }
+
+  /* ---- Reset ---- */
+  const btnReset      = document.getElementById('btnReset');
+  const modalOverlay  = document.getElementById('modalOverlay');
+  const btnCancel     = document.getElementById('btnCancel');
+  const btnConfirmReset = document.getElementById('btnConfirmReset');
+
+  btnReset.addEventListener('click', () => modalOverlay.classList.add('open'));
+  btnCancel.addEventListener('click', () => modalOverlay.classList.remove('open'));
+  modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) modalOverlay.classList.remove('open'); });
+
+  btnConfirmReset.addEventListener('click', () => {
+    // Reset estado
+    clientes = [];
+    columnas = [];
+    fileName = 'llega_ya';
+
+    // Reset UI
+    fileInput.value = '';
+    fileNameEl.textContent = '';
+    numDivisions.value = 2;
+    statTotal.style.display = 'none';
+    statPor.style.display = 'none';
+    totalCount.textContent = '0';
+    porColumna.textContent = '—';
+    btnDivide.disabled = true;
+    resultsHeader.style.display = 'none';
+    showAlert('');
+    results.innerHTML = '<div class="empty"><span class="big">⚡</span>Carga un JSON y define el número de divisiones</div>';
+
+    modalOverlay.classList.remove('open');
+  });
+</script>
+
+</body>
+</html>
