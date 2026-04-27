@@ -711,7 +711,8 @@ font-weight: 700;
     const zonaDetectada = col[0]?.Zone ?? col[0]?.zona ?? 'San Francisco';
 
     const clientes = col.map((c, j) => {
-      const tel = String(c['Dropoff contact'] ?? c.telefono ?? c.phone ?? '').replace(/\D/g, '');
+      const telRaw = String(c['Dropoff contact'] ?? c.telefono ?? c.phone ?? '').replace(/\D/g, '');
+      const tel = telRaw && !telRaw.startsWith('1') ? '1' + telRaw : telRaw;
       return {
         id: c.Code ?? c.id ?? j + 1,
         nombre: c['Dropoff Contact Name'] ?? c['Customer name'] ?? c.nombre ?? c.name ?? '—',
@@ -720,7 +721,7 @@ font-weight: 700;
         lat: null,
         lng: null,
         cod: Number(c.COD ?? c.cod ?? 0),
-        nota: c['Reference Id'] ?? c.nota ?? null,
+        nota: c['Reference Id'] || c['Note'] || c.nota || null,
         estado: 'pendiente'
       };
     });
