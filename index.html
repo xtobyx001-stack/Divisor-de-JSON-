@@ -596,10 +596,59 @@ font-weight: 700;
   }
 
   function descargarXLSX(i, nombreFinal) {
-    const ws = XLSX.utils.json_to_sheet(columnas[i]);
+    // Columnas seleccionadas en orden limpio
+    const COLS = [
+      { key: 'Code',                 label: 'Código',        width: 12 },
+      { key: 'Customer name',        label: 'Cliente',       width: 28 },
+      { key: 'Dropoff Contact Name', label: 'Contacto',      width: 22 },
+      { key: 'Dropoff contact',      label: 'Teléfono',      width: 16 },
+      { key: 'Drop off address',     label: 'Dirección',     width: 40 },
+      { key: 'Zone',                 label: 'Zona',          width: 18 },
+      { key: 'COD',                  label: 'COD',           width: 10 },
+      { key: 'Reference Id',         label: 'Referencia',    width: 20 },
+      { key: 'Note',                 label: 'Nota',          width: 30 },
+    ];
+
+    const data = columnas[i];
+
+    // Encabezados con estilo
+    const headerRow = {};
+    COLS.forEach(c => { headerRow[c.label] = c.label; });
+
+    // Filas de datos usando labels como claves
+    const rows = data.map(row => {
+      const out = {};
+      COLS.forEach(c => { out[c.label] = row[c.key] ?? ''; });
+      return out;
+    });
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+
+    // Ancho de columnas
+    ws['!cols'] = COLS.map(c => ({ wch: c.width }));
+
+    // Estilo de encabezado (negrita + fondo)
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      const cell = ws[XLSX.utils.encode_cell({ r: 0, c: C })];
+      if (cell) {
+        cell.s = {
+          font: { bold: true, color: { rgb: '000000' } },
+          fill: { fgColor: { rgb: 'E8FF47' } },
+          alignment: { horizontal: 'center', vertical: 'center' },
+          border: {
+            bottom: { style: 'thin', color: { rgb: '999999' } }
+          }
+        };
+      }
+    }
+
+    // Altura de la fila de encabezado
+    ws['!rows'] = [{ hpt: 20 }];
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Clientes');
-    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array', cellStyles: true });
     const blob  = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     triggerDownload(blob, `${nombreFinal}.xlsx`);
   }
