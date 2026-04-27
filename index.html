@@ -721,7 +721,7 @@ font-weight: 700;
         lat: null,
         lng: null,
         cod: Number(c.COD ?? c.cod ?? 0),
-        nota: c['Reference Id'] || c['Note'] || c.nota || null,
+        nota: c['Note'] || c['Reference Id'] || c.nota || null,
         estado: 'pendiente'
       };
     });
