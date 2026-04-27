@@ -6,6 +6,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Llega Ya — Divisor de Rutas</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<!-- SheetJS para leer y escribir Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   html, body {
     background-color: #0d0d0d !important;
@@ -63,7 +65,6 @@ font-size: 1.1rem;
 transition: border-color 0.2s, color 0.2s, transform 0.4s;
 flex-shrink: 0;
 }
-
 .btn-reset:hover { border-color: #ff4444; color: #ff4444 !important; transform: rotate(90deg); }
 .btn-reset:active { transform: rotate(180deg); }
 
@@ -82,7 +83,7 @@ background: #161616 !important;
 border: 1px solid #3a3a3a;
 border-radius: 6px;
 padding: 2rem;
-width: 300px;
+width: 320px;
 text-align: center;
 transform: translateY(10px);
 transition: transform 0.2s;
@@ -213,6 +214,8 @@ padding: 0.75rem 1rem; border-radius: 2px;
 font-family: ‘Space Mono’, monospace; font-size: 0.75rem;
 margin-bottom: 1.5rem; display: none;
 }
+
+/* ── Modal Renombrar + Formato ── */
 .input-nombre {
 width: 100%;
 background: #0d0d0d !important;
@@ -233,6 +236,38 @@ margin-bottom: 0.5rem;
 display: block;
 text-align: left;
 }
+
+/* Selector de formato */
+.format-row {
+display: flex;
+gap: 0.5rem;
+margin-bottom: 1.25rem;
+}
+.fmt-btn {
+flex: 1;
+padding: 0.55rem 0.5rem;
+font-family: ‘Space Mono’, monospace;
+font-size: 0.72rem;
+font-weight: 700;
+letter-spacing: 0.08em;
+text-transform: uppercase;
+border-radius: 2px;
+cursor: pointer;
+border: 1px solid #2a2a2a;
+background: #0d0d0d !important;
+color: #666 !important;
+transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.fmt-btn.active {
+border-color: #e8ff47;
+color: #000 !important;
+background: #e8ff47 !important;
+}
+.fmt-btn:not(.active):hover {
+border-color: #555;
+color: #ccc !important;
+}
+
 .btn-confirm-dl {
 background: #e8ff47 !important;
 border: 1px solid #e8ff47;
@@ -251,6 +286,8 @@ font-weight: 700;
   <button class="btn-reset" id="btnReset" title="Limpiar todo">⚙</button>
 </header>
 
+<!-- Modal: Limpiar sesión -->
+
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <span class="modal-icon">🗑</span>
@@ -263,12 +300,19 @@ font-weight: 700;
   </div>
 </div>
 
+<!-- Modal: Renombrar + Formato -->
+
 <div class="modal-overlay" id="modalRename">
   <div class="modal">
     <span class="modal-icon">✏️</span>
-    <h3>Nombre del archivo</h3>
-    <span class="ext-label">Escribe el nombre (sin .json)</span>
+    <h3>Guardar columna</h3>
+    <span class="ext-label">Nombre del archivo (sin extensión)</span>
     <input class="input-nombre" type="text" id="inputNombre" placeholder="mi_ruta_columna_1">
+    <span class="ext-label">Formato de descarga</span>
+    <div class="format-row">
+      <button class="fmt-btn active" id="fmtJSON" onclick="setFormato('json')">JSON</button>
+      <button class="fmt-btn" id="fmtXLSX" onclick="setFormato('xlsx')">Excel .xlsx</button>
+    </div>
     <div class="modal-actions">
       <button class="btn-cancel" id="btnCancelRename">Cancelar</button>
       <button class="btn-confirm-dl" id="btnConfirmDl">↓ Descargar</button>
@@ -277,9 +321,9 @@ font-weight: 700;
 </div>
 
 <div class="upload-zone" id="dropZone">
-  <input type="file" id="fileInput" accept=".json">
+  <input type="file" id="fileInput" accept=".json,.xlsx,.xls">
   <span class="upload-icon">📂</span>
-  <p>Arrastra tu archivo JSON o haz clic para seleccionar</p>
+  <p>Arrastra tu archivo JSON o Excel (.xlsx / .xls) aquí</p>
   <div class="file-name" id="fileName"></div>
 </div>
 
@@ -307,29 +351,33 @@ font-weight: 700;
 <div id="results">
   <div class="empty">
     <span class="big">⚡</span>
-    Carga un JSON y define el número de divisiones
+    Carga un JSON o Excel y define el número de divisiones
   </div>
 </div>
 
 <script>
   let clientes = [];
-  let fileName = 'llega_ya';
+  let fileBaseName = 'llega_ya';
   let columnas = [];
+  let formatoDescarga = 'json'; // 'json' | 'xlsx'
+  let descargaIndex = -1;
+  let descargaTodo = false;
 
-  const fileInput = document.getElementById('fileInput');
-  const dropZone  = document.getElementById('dropZone');
-  const fileNameEl = document.getElementById('fileName');
-  const numDivisions = document.getElementById('numDivisions');
-  const btnDivide = document.getElementById('btnDivide');
-  const results   = document.getElementById('results');
-  const alert     = document.getElementById('alert');
-  const statTotal = document.getElementById('statTotal');
-  const statPor   = document.getElementById('statPor');
-  const totalCount = document.getElementById('totalCount');
-  const porColumna = document.getElementById('porColumna');
+  const fileInput     = document.getElementById('fileInput');
+  const dropZone      = document.getElementById('dropZone');
+  const fileNameEl    = document.getElementById('fileName');
+  const numDivisions  = document.getElementById('numDivisions');
+  const btnDivide     = document.getElementById('btnDivide');
+  const results       = document.getElementById('results');
+  const alertEl       = document.getElementById('alert');
+  const statTotal     = document.getElementById('statTotal');
+  const statPor       = document.getElementById('statPor');
+  const totalCount    = document.getElementById('totalCount');
+  const porColumna    = document.getElementById('porColumna');
   const resultsHeader = document.getElementById('resultsHeader');
   const btnDownloadAll = document.getElementById('btnDownloadAll');
 
+  // ── Drag & Drop ──
   dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
   dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
   dropZone.addEventListener('drop', e => {
@@ -339,8 +387,21 @@ font-weight: 700;
   });
   fileInput.addEventListener('change', () => { if (fileInput.files[0]) processFile(fileInput.files[0]); });
 
+  // ── Procesar archivo ──
   function processFile(file) {
-    fileName = file.name.replace('.json', '');
+    const ext = file.name.split('.').pop().toLowerCase();
+    fileBaseName = file.name.replace(/\.(json|xlsx|xls)$/i, '');
+
+    if (ext === 'json') {
+      readJSON(file);
+    } else if (ext === 'xlsx' || ext === 'xls') {
+      readExcel(file);
+    } else {
+      showAlert('Formato no soportado. Usa JSON, .xlsx o .xls.');
+    }
+  }
+
+  function readJSON(file) {
     const reader = new FileReader();
     reader.onload = e => {
       try {
@@ -349,13 +410,8 @@ font-weight: 700;
         const key  = keys.find(k => Array.isArray(json[k])) || null;
         clientes = key ? json[key] : (Array.isArray(json) ? json : []);
         if (!clientes.length) throw new Error('Sin datos');
-        fileNameEl.textContent = `✓ ${file.name} — ${clientes.length} clientes`;
-        statTotal.style.display = 'flex';
-        totalCount.textContent  = clientes.length;
-        btnDivide.disabled = false;
-        showAlert('');
-        updatePreview();
-      } catch(err) {
+        onFileLoaded(file.name, clientes);
+      } catch {
         showAlert('Error al leer el JSON. Verifica el formato.');
         btnDivide.disabled = true;
       }
@@ -363,14 +419,42 @@ font-weight: 700;
     reader.readAsText(file);
   }
 
+  function readExcel(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const data  = new Uint8Array(e.target.result);
+        const wb    = XLSX.read(data, { type: 'array' });
+        const ws    = wb.Sheets[wb.SheetNames[0]];
+        const rows  = XLSX.utils.sheet_to_json(ws, { defval: '' });
+        if (!rows.length) throw new Error('Sin datos');
+        clientes = rows;
+        onFileLoaded(file.name, clientes);
+      } catch {
+        showAlert('Error al leer el Excel. Verifica que tenga datos en la primera hoja.');
+        btnDivide.disabled = true;
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function onFileLoaded(name, data) {
+    fileNameEl.textContent = `✓ ${name} — ${data.length} clientes`;
+    statTotal.style.display = 'flex';
+    totalCount.textContent  = data.length;
+    btnDivide.disabled = false;
+    showAlert('');
+    updatePreview();
+  }
+
   numDivisions.addEventListener('input', updatePreview);
 
   function updatePreview() {
     const n = parseInt(numDivisions.value) || 1;
     if (!clientes.length) return;
-    const base = Math.floor(clientes.length / n);
+    const base  = Math.floor(clientes.length / n);
     const resto = clientes.length % n;
-    porColumna.textContent = resto === 0 ? base : `${base}–${base+1}`;
+    porColumna.textContent = resto === 0 ? base : `${base}–${base + 1}`;
     statPor.style.display = 'flex';
   }
 
@@ -378,9 +462,8 @@ font-weight: 700;
 
   function dividir() {
     const n = Math.max(1, parseInt(numDivisions.value) || 1);
-    const total = clientes.length;
-    if (n > total) {
-      showAlert(`No puedes dividir ${total} clientes en ${n} columnas. Usa máximo ${total}.`);
+    if (n > clientes.length) {
+      showAlert(`No puedes dividir ${clientes.length} clientes en ${n} columnas. Usa máximo ${clientes.length}.`);
       return;
     }
     showAlert('');
@@ -405,7 +488,7 @@ font-weight: 700;
   function renderColumnas(cols) {
     resultsHeader.style.display = cols.length ? 'flex' : 'none';
     if (!cols.length) {
-      results.innerHTML = '<div class="empty"><span class="big">⚡</span>Carga un JSON y define el número de divisiones</div>';
+      results.innerHTML = '<div class="empty"><span class="big">⚡</span>Carga un JSON o Excel y define el número de divisiones</div>';
       return;
     }
     results.innerHTML = '<div class="grid" id="grid"></div>';
@@ -416,7 +499,7 @@ font-weight: 700;
       card.style.animationDelay = `${i * 0.05}s`;
       const rows = col.map(c => `
         <div class="cliente-row">
-          <span class="cliente-id">#${c.id ?? i+1}</span>
+          <span class="cliente-id">#${c.id ?? i + 1}</span>
           <span class="cliente-nombre">${c.nombre ?? c.name ?? '—'}</span>
           <span class="cliente-tel">${c.telefono ?? c.phone ?? ''}</span>
         </div>`).join('');
@@ -427,37 +510,42 @@ font-weight: 700;
         </div>
         <div class="card-body">${rows}</div>
         <div class="card-footer">
-          <button class="btn-download" onclick="descargar(${i})">↓ Descargar columna ${i + 1}</button>
+          <button class="btn-download" onclick="abrirModalDescarga(${i})">↓ Descargar columna ${i + 1}</button>
         </div>`;
       grid.appendChild(card);
     });
   }
 
-  let descargaIndex = -1;
+  // ── Formato ──
+  function setFormato(fmt) {
+    formatoDescarga = fmt;
+    document.getElementById('fmtJSON').classList.toggle('active', fmt === 'json');
+    document.getElementById('fmtXLSX').classList.toggle('active', fmt === 'xlsx');
+  }
 
-  function descargar(i) {
+  // ── Modal descarga individual ──
+  function abrirModalDescarga(i) {
     descargaIndex = i;
+    descargaTodo  = false;
     const inputNombre = document.getElementById('inputNombre');
-    inputNombre.value = `${fileName}_columna_${i + 1}`;
+    inputNombre.value = `${fileBaseName}_columna_${i + 1}`;
     document.getElementById('modalRename').classList.add('open');
     setTimeout(() => inputNombre.select(), 100);
   }
 
-  function ejecutarDescarga(nombreFinal) {
-    const i = descargaIndex;
-    const payload = { clientes: columnas[i] };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url;
-    a.download = `${nombreFinal}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
   document.getElementById('btnConfirmDl').addEventListener('click', () => {
-    const nombre = document.getElementById('inputNombre').value.trim() || `${fileName}_columna_${descargaIndex + 1}`;
-    ejecutarDescarga(nombre);
+    const nombre = document.getElementById('inputNombre').value.trim();
+    if (descargaTodo) {
+      columnas.forEach((_, i) => {
+        setTimeout(() => {
+          const n = nombre ? `${nombre}_${i + 1}` : `${fileBaseName}_columna_${i + 1}`;
+          ejecutarDescarga(i, n);
+        }, i * 350);
+      });
+    } else {
+      const n = nombre || `${fileBaseName}_columna_${descargaIndex + 1}`;
+      ejecutarDescarga(descargaIndex, n);
+    }
     document.getElementById('modalRename').classList.remove('open');
   });
 
@@ -466,29 +554,58 @@ font-weight: 700;
   });
 
   document.getElementById('inputNombre').addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('btnConfirmDl').click();
+    if (e.key === 'Enter')  document.getElementById('btnConfirmDl').click();
     if (e.key === 'Escape') document.getElementById('modalRename').classList.remove('open');
   });
 
+  // ── Ejecutar descarga según formato ──
+  function ejecutarDescarga(i, nombreFinal) {
+    if (formatoDescarga === 'json') {
+      descargarJSON(i, nombreFinal);
+    } else {
+      descargarXLSX(i, nombreFinal);
+    }
+  }
+
+  function descargarJSON(i, nombreFinal) {
+    const payload = { clientes: columnas[i] };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    triggerDownload(blob, `${nombreFinal}.json`);
+  }
+
+  function descargarXLSX(i, nombreFinal) {
+    const ws = XLSX.utils.json_to_sheet(columnas[i]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Clientes');
+    XLSX.writeFile(wb, `${nombreFinal}.xlsx`);
+  }
+
+  function triggerDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement('a');
+    a.href = url; a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ── Descargar todo ──
   btnDownloadAll.addEventListener('click', () => {
-    columnas.forEach((_, i) => setTimeout(() => {
-      const payload = { clientes: columnas[i] };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href = url; a.download = `${fileName}_columna_${i + 1}.json`;
-      a.click(); URL.revokeObjectURL(url);
-    }, i * 300));
+    descargaTodo = true;
+    const inputNombre = document.getElementById('inputNombre');
+    inputNombre.value = fileBaseName;
+    document.getElementById('modalRename').classList.add('open');
+    setTimeout(() => inputNombre.select(), 100);
   });
 
   function showAlert(msg) {
-    alert.textContent = msg;
-    alert.style.display = msg ? 'block' : 'none';
+    alertEl.textContent = msg;
+    alertEl.style.display = msg ? 'block' : 'none';
   }
 
-  const btnReset = document.getElementById('btnReset');
-  const modalOverlay = document.getElementById('modalOverlay');
-  const btnCancel = document.getElementById('btnCancel');
+  // ── Reset ──
+  const btnReset       = document.getElementById('btnReset');
+  const modalOverlay   = document.getElementById('modalOverlay');
+  const btnCancel      = document.getElementById('btnCancel');
   const btnConfirmReset = document.getElementById('btnConfirmReset');
 
   btnReset.addEventListener('click', () => modalOverlay.classList.add('open'));
@@ -496,14 +613,14 @@ font-weight: 700;
   modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) modalOverlay.classList.remove('open'); });
 
   btnConfirmReset.addEventListener('click', () => {
-    clientes = []; columnas = []; fileName = 'llega_ya';
+    clientes = []; columnas = []; fileBaseName = 'llega_ya';
     fileInput.value = ''; fileNameEl.textContent = '';
     numDivisions.value = 2;
     statTotal.style.display = 'none'; statPor.style.display = 'none';
     totalCount.textContent = '0'; porColumna.textContent = '—';
     btnDivide.disabled = true; resultsHeader.style.display = 'none';
     showAlert('');
-    results.innerHTML = '<div class="empty"><span class="big">⚡</span>Carga un JSON y define el número de divisiones</div>';
+    results.innerHTML = '<div class="empty"><span class="big">⚡</span>Carga un JSON o Excel y define el número de divisiones</div>';
     modalOverlay.classList.remove('open');
   });
 </script>
