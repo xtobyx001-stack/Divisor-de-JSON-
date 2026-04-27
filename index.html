@@ -199,6 +199,16 @@ display: flex; align-items: center; justify-content: center; gap: 0.5rem;
 }
 .btn-download:hover { border-color: #e8ff47 !important; color: #e8ff47 !important; }
 
+.btn-download-ruta {
+width: 100%; background: #0d0d0d !important;
+border: 1px solid #e8ff47; color: #e8ff47 !important;
+padding: 0.5rem; font-family: ‘Space Mono’, monospace; font-size: 0.7rem;
+cursor: pointer; border-radius: 2px; letter-spacing: 0.08em; text-transform: uppercase;
+display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+margin-top: 0.5rem;
+}
+.btn-download-ruta:hover { background: #e8ff47 !important; color: #000 !important; }
+
 .empty {
 text-align: center; padding: 4rem 2rem; color: #666 !important;
 font-family: ‘Space Mono’, monospace; font-size: 0.8rem;
@@ -345,7 +355,10 @@ font-weight: 700;
 
 <div id="resultsHeader" class="results-header" style="display:none">
   <h2>Columnas generadas</h2>
-  <button class="btn-download-all" id="btnDownloadAll">↓ Descargar todo</button>
+  <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:flex-end">
+    <button class="btn-download-all" id="btnDownloadAll">↓ Descargar todo</button>
+    <button class="btn-download-all" id="btnDownloadAllRuta" style="border-color:#e8ff47;color:#e8ff47">⚡ JSON Ruta todo</button>
+  </div>
 </div>
 
 <div id="results">
@@ -533,6 +546,7 @@ font-weight: 700;
         <div class="card-body">${rows}</div>
         <div class="card-footer">
           <button class="btn-download" onclick="abrirModalDescarga(${i})">↓ Descargar columna ${i + 1}</button>
+          <button class="btn-download-ruta" onclick="descargarJSONRuta(${i})">⚡ JSON Ruta columna ${i + 1}</button>
         </div>`;
       grid.appendChild(card);
     });
@@ -670,6 +684,53 @@ font-weight: 700;
     inputNombre.value = fileBaseName;
     document.getElementById('modalRename').classList.add('open');
     setTimeout(() => inputNombre.select(), 100);
+  });
+
+  // ── Construir JSON Ruta ──
+  function buildJSONRuta(col, index) {
+    const hoy = new Date();
+    const fecha = hoy.toISOString().split('T')[0];
+
+    // Detectar zona del primer cliente
+    const zonaDetectada = col[0]?.Zone ?? col[0]?.zona ?? 'San Francisco';
+
+    const clientes = col.map((c, j) => {
+      const tel = String(c['Dropoff contact'] ?? c.telefono ?? c.phone ?? '').replace(/\D/g, '');
+      return {
+        id: c.Code ?? c.id ?? j + 1,
+        nombre: c['Customer name'] ?? c.nombre ?? c.name ?? '—',
+        telefono: tel,
+        whatsapp: tel ? `https://wa.me/${tel}` : null,
+        lat: null,
+        lng: null,
+        cod: Number(c.COD ?? c.cod ?? 0),
+        nota: c['Reference Id'] ?? c.nota ?? null,
+        estado: 'pendiente'
+      };
+    });
+
+    return {
+      fecha,
+      zona: zonaDetectada,
+      punto_salida: {
+        nombre: 'Llega Ya - Sanchez casa 9A',
+        lat: 19.2917,
+        lng: -70.2558
+      },
+      clientes
+    };
+  }
+
+  function descargarJSONRuta(i) {
+    const payload = buildJSONRuta(columnas[i], i);
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    triggerDownload(blob, `${fileBaseName}_ruta_columna_${i + 1}.json`);
+  }
+
+  document.getElementById('btnDownloadAllRuta').addEventListener('click', () => {
+    columnas.forEach((_, i) => {
+      setTimeout(() => descargarJSONRuta(i), i * 350);
+    });
   });
 
   function showAlert(msg) {
