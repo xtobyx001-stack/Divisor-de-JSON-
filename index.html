@@ -330,6 +330,21 @@ font-weight: 700;
   </div>
 </div>
 
+<!-- Modal: Nombre JSON Ruta -->
+
+<div class="modal-overlay" id="modalRuta">
+  <div class="modal">
+    <span class="modal-icon">⚡</span>
+    <h3>Nombre del JSON Ruta</h3>
+    <span class="ext-label">Escribe el nombre (sin .json)</span>
+    <input class="input-nombre" type="text" id="inputNombreRuta" placeholder="ruta_columna_1">
+    <div class="modal-actions">
+      <button class="btn-cancel" id="btnCancelRuta">Cancelar</button>
+      <button class="btn-confirm-dl" id="btnConfirmRuta">⚡ Descargar</button>
+    </div>
+  </div>
+</div>
+
 <div class="upload-zone" id="dropZone">
   <input type="file" id="fileInput" accept=".json,.xlsx,.xls">
   <span class="upload-icon">📂</span>
@@ -375,6 +390,7 @@ font-weight: 700;
   let formatoDescarga = 'json'; // 'json' | 'xlsx'
   let descargaIndex = -1;
   let descargaTodo = false;
+  let rutaIndex = -1;
 
   const fileInput     = document.getElementById('fileInput');
   const dropZone      = document.getElementById('dropZone');
@@ -722,15 +738,39 @@ font-weight: 700;
   }
 
   function descargarJSONRuta(i) {
-    const payload = buildJSONRuta(columnas[i], i);
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    triggerDownload(blob, `${fileBaseName}_ruta_columna_${i + 1}.json`);
+    rutaIndex = i;
+    const inputNombre = document.getElementById('inputNombreRuta');
+    inputNombre.value = `${fileBaseName}_ruta_columna_${i + 1}`;
+    document.getElementById('modalRuta').classList.add('open');
+    setTimeout(() => inputNombre.select(), 100);
   }
 
   document.getElementById('btnDownloadAllRuta').addEventListener('click', () => {
     columnas.forEach((_, i) => {
       setTimeout(() => descargarJSONRuta(i), i * 350);
     });
+  });
+
+  // ── Modal JSON Ruta listeners ──
+  document.getElementById('btnConfirmRuta').addEventListener('click', () => {
+    const nombre = document.getElementById('inputNombreRuta').value.trim() || `${fileBaseName}_ruta_columna_${rutaIndex + 1}`;
+    const payload = buildJSONRuta(columnas[rutaIndex], rutaIndex);
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    triggerDownload(blob, `${nombre}.json`);
+    document.getElementById('modalRuta').classList.remove('open');
+  });
+
+  document.getElementById('btnCancelRuta').addEventListener('click', () => {
+    document.getElementById('modalRuta').classList.remove('open');
+  });
+
+  document.getElementById('inputNombreRuta').addEventListener('keydown', e => {
+    if (e.key === 'Enter')  document.getElementById('btnConfirmRuta').click();
+    if (e.key === 'Escape') document.getElementById('modalRuta').classList.remove('open');
+  });
+
+  document.getElementById('modalRuta').addEventListener('click', e => {
+    if (e.target === document.getElementById('modalRuta')) document.getElementById('modalRuta').classList.remove('open');
   });
 
   function showAlert(msg) {
