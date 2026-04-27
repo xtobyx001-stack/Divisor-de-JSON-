@@ -423,10 +423,32 @@ font-weight: 700;
     const reader = new FileReader();
     reader.onload = e => {
       try {
-        const data  = new Uint8Array(e.target.result);
-        const wb    = XLSX.read(data, { type: 'array' });
-        const ws    = wb.Sheets[wb.SheetNames[0]];
-        const rows  = XLSX.utils.sheet_to_json(ws, { defval: '' });
+        const data = new Uint8Array(e.target.result);
+        const wb   = XLSX.read(data, { type: 'array' });
+        const ws   = wb.Sheets[wb.SheetNames[0]];
+
+        // Leer como array de arrays para detectar fila de encabezados
+        const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+        // Buscar la fila que contiene los encabezados reales
+        let headerRow = 0;
+        for (let i = 0; i < Math.min(raw.length, 5); i++) {
+          const rowStr = raw[i].join('|').toLowerCase();
+          if (rowStr.includes('customer name') || rowStr.includes('code') || rowStr.includes('nombre')) {
+            headerRow = i;
+            break;
+          }
+        }
+
+        const headers = raw[headerRow];
+        const rows = [];
+        for (let i = headerRow + 1; i < raw.length; i++) {
+          if (raw[i].every(cell => cell === '')) continue;
+          const obj = {};
+          headers.forEach((h, idx) => { obj[h] = raw[i][idx] ?? ''; });
+          rows.push(obj);
+        }
+
         if (!rows.length) throw new Error('Sin datos');
         clientes = rows;
         onFileLoaded(file.name, clientes);
@@ -577,15 +599,19 @@ font-weight: 700;
     const ws = XLSX.utils.json_to_sheet(columnas[i]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Clientes');
-    XLSX.writeFile(wb, `${nombreFinal}.xlsx`);
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob  = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    triggerDownload(blob, `${nombreFinal}.xlsx`);
   }
 
   function triggerDownload(blob, filename) {
     const url = URL.createObjectURL(blob);
     const a   = document.createElement('a');
-    a.href = url; a.download = filename;
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
   }
 
   // ── Descargar todo ──
