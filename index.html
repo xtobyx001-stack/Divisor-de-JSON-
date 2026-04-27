@@ -714,7 +714,7 @@ font-weight: 700;
       const tel = String(c['Dropoff contact'] ?? c.telefono ?? c.phone ?? '').replace(/\D/g, '');
       return {
         id: c.Code ?? c.id ?? j + 1,
-        nombre: c['Customer name'] ?? c.nombre ?? c.name ?? '—',
+        nombre: c['Dropoff Contact Name'] ?? c['Customer name'] ?? c.nombre ?? c.name ?? '—',
         telefono: tel,
         whatsapp: tel ? `https://wa.me/${tel}` : null,
         lat: null,
