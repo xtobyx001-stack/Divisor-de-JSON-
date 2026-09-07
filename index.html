@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conversor Excel - Llega Ya</title>
+    <title>Conversor Automático - Llega Ya</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -158,12 +158,12 @@
 </head>
 <body>
     <div class="container">
-        <h1>🚚 Conversor Excel - Llega Ya</h1>
-        <p class="subtitle">Convierte tu Excel al formato exacto de Supabase</p>
+        <h1>🚚 Conversor Automático - Llega Ya</h1>
+        <p class="subtitle">Detecta y convierte tu Excel automáticamente al formato Supabase</p>
         
         <div class="info-box">
-            <strong>📋 Columnas de la tabla packages:</strong>
-            tracking_code, client_name, client_phone, client_address, status, notes, price, delivery_date, assigned_to, scheduled_date, completed_date, saved_date, delivery_time, product_info, zone, store, is_vip, color_mark, wa_estado
+            <strong>✅ Compatible con reportes de pedidos (San Francisco, Santo Domingo, etc.)</strong>
+            La app detectará automáticamente la fila de encabezados y mapeará las columnas correctamente.
         </div>
         
         <div class="upload-box" onclick="document.getElementById('fileInput').click()" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
@@ -175,8 +175,8 @@
         <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" onchange="handleFile(event)">
         
         <div id="mappingSection" class="mapping">
-            <h3>🔗 Mapeo de Columnas</h3>
-            <p>La app detectó automáticamente las columnas. Verifica que coincidan:</p>
+            <h3> Mapeo de Columnas (Automático)</h3>
+            <p>La app ya configuró todo. Solo verifica que se vea bien:</p>
             <div class="mapping-grid" id="mappingGrid"></div>
             <div class="preview" id="preview"></div>
             <button class="btn" onclick="convertAndDownload()">💾 Descargar CSV para Supabase</button>
@@ -191,7 +191,7 @@
         let excelHeaders = [];
         let columnMapping = {};
 
-        // Columnas EXACTAS de la tabla packages en Supabase
+        // Estructura exacta de Supabase
         const SUPABASE_COLUMNS = [
             'tracking_code', 'client_name', 'client_phone', 'client_address',
             'status', 'notes', 'price', 'delivery_date', 'assigned_to',
@@ -232,40 +232,38 @@
                     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                     const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
                     
-                    // Buscar la fila REAL de encabezados
+                    // LÓGICA AUTOMÁTICA PARA TU EXCEL:
+                    // 1. Buscar la fila que tenga "Code", "Created at", "Price", etc.
                     let headerRowIndex = -1;
-                    
-                    // Estrategia 1: Buscar fila que tenga columnas con nombres específicos de datos
-                    const expectedHeaders = ['code', 'created', 'price', 'cod', 'customer', 'zone', 'pickup', 'note', 'dropoff', 'address'];
+                    const targetHeaders = ['code', 'created at', 'price', 'cod', 'customer name', 'zone', 'pickup address', 'note', 'dropoff contact name', 'dropoff contact', 'drop off address'];
                     
                     for (let i = 0; i < Math.min(10, jsonData.length); i++) {
                         const row = jsonData[i];
                         if (!row || row.length < 5) continue;
                         
-                        // Contar cuántas celdas coinciden con los encabezados esperados
                         let matchCount = 0;
                         row.forEach(cell => {
                             const val = String(cell).toLowerCase().trim();
-                            if (expectedHeaders.some(exp => val.includes(exp))) {
+                            // Si coincide con alguno de los encabezados esperados
+                            if (targetHeaders.some(th => val === th || val.includes(th))) {
                                 matchCount++;
                             }
                         });
                         
-                        // Si al menos 7 columnas coinciden, es la fila de encabezados
-                        if (matchCount >= 7) {
+                        // Si encuentra al menos 8 coincidencias, ES LA FILA DE ENCABEZADOS
+                        if (matchCount >= 8) {
                             headerRowIndex = i;
                             break;
                         }
                     }
                     
-                    // Estrategia 2: Si no encontró, buscar por palabras clave genéricas
+                    // Fallback: Si no encontró por nombre exacto, busca por palabras clave
                     if (headerRowIndex === -1) {
-                        const keywords = ['code', 'name', 'phone', 'address', 'customer', 'contact', 'price', 'amount'];
                         for (let i = 0; i < Math.min(10, jsonData.length); i++) {
                             const row = jsonData[i];
                             if (row && row.some(cell => {
                                 const val = String(cell).toLowerCase().trim();
-                                return keywords.some(kw => val.includes(kw));
+                                return val.includes('code') || val.includes('address') || val.includes('contact');
                             })) {
                                 headerRowIndex = i;
                                 break;
@@ -273,15 +271,10 @@
                         }
                     }
                     
-                    // Estrategia 3: Usar segunda fila si la primera parece ser título del reporte
+                    // Último recurso: Fila 2 (índice 1) si la fila 1 parece título
                     if (headerRowIndex === -1 && jsonData.length > 1) {
-                        const firstRow = jsonData[0];
-                        const isFirstRowTitle = firstRow && firstRow.some(cell => 
-                            String(cell).toLowerCase().includes('report') || 
-                            String(cell).toLowerCase().includes('order')
-                        );
-                        
-                        if (isFirstRowTitle) {
+                        const firstRowStr = JSON.stringify(jsonData[0]).toLowerCase();
+                        if (firstRowStr.includes('report') || firstRowStr.includes('order')) {
                             headerRowIndex = 1;
                         } else {
                             headerRowIndex = 0;
@@ -289,7 +282,7 @@
                     }
                     
                     if (headerRowIndex === -1) {
-                        showError('❌ No se pudieron detectar los encabezados. Verifica el formato del archivo.');
+                        showError('❌ No se pudieron detectar los encabezados.');
                         return;
                     }
                     
@@ -299,63 +292,60 @@
                     );
                     
                     if (excelData.length === 0) {
-                        showError('❌ No se encontraron datos después de los encabezados');
+                        showError('❌ No hay datos después de los encabezados.');
                         return;
                     }
                     
                     autoMapColumns();
                     showMapping();
-                    showSuccess(`✅ ${excelData.length} filas detectadas (encabezados en fila ${headerRowIndex + 1})`);
+                    showSuccess(`✅ ${excelData.length} filas detectadas. Encabezados en fila ${headerRowIndex + 1}.`);
                 } catch (err) {
-                    showError('❌ Error al leer el archivo: ' + err.message);
+                    showError('❌ Error: ' + err.message);
                 }
             };
             reader.readAsArrayBuffer(file);
         }
 
         function autoMapColumns() {
-            const keywordMap = {
-                'tracking_code': ['code', 'tracking', 'order', 'id', 'tracking_code', 'order_id'],
-                'client_name': ['customer name', 'contact name', 'name', 'client', 'dropoff contact name', 'cliente', 'recipient'],
-                'client_phone': ['dropoff contact', 'phone', 'teléfono', 'telefono', 'contact', 'cell', 'whatsapp', 'mobile'],
-                'client_address': ['drop off address', 'dropoff address', 'address', 'direccion', 'delivery address', 'ubicacion'],
-                'notes': ['note', 'notes', 'remark', 'comments', 'observaciones', 'notas'],
-                'price': ['cod', 'price', 'monto', 'amount', 'total', 'precio', 'cost'],
-                'delivery_date': ['created at', 'delivery date', 'fecha entrega', 'expected date', 'date'],
-                'assigned_to': ['assigned', 'driver', 'chofer', 'repartidor', 'courier'],
-                'product_info': ['product', 'producto', 'item', 'description', 'descripcion', 'details'],
-                'zone': ['zone', 'zona', 'city', 'ciudad', 'area', 'sector'],
-                'store': ['pickup address', 'store', 'tienda', 'pickup', 'origen', 'warehouse']
+            // MAPEO EXACTO PARA TU FORMATO DE EXCEL
+            const exactMap = {
+                'tracking_code': 'code',
+                'client_name': 'dropoff contact name', // Nombre del cliente real
+                'client_phone': 'dropoff contact',      // Teléfono real
+                'client_address': 'drop off address',   // Dirección real
+                'store': 'customer name',               // Tienda/Origen
+                'notes': 'note',                        // Notas/Producto
+                'price': 'cod',                         // Precio a cobrar (COD)
+                'zone': 'zone',
+                'delivery_date': 'created at'           // Fecha de creación como referencia
             };
             
             const headersLower = excelHeaders.map(h => h.toLowerCase().trim());
             columnMapping = {};
             
-            for (const [supabaseCol, keywords] of Object.entries(keywordMap)) {
-                let bestMatch = -1;
-                let bestScore = 0;
-                
-                for (let i = 0; i < headersLower.length; i++) {
-                    const header = headersLower[i];
-                    let score = 0;
-                    
-                    for (const keyword of keywords) {
-                        if (header === keyword) {
-                            score = 10;
+            // Aplicar mapeo exacto
+            for (const [supabaseCol, excelHeader] of Object.entries(exactMap)) {
+                const idx = headersLower.findIndex(h => h === excelHeader);
+                if (idx !== -1) {
+                    columnMapping[supabaseCol] = idx;
+                }
+            }
+            
+            // Mapeo flexible para campos opcionales si no están en el mapa exacto
+            const flexibleMap = {
+                'product_info': ['note', 'description', 'product'],
+                'status': ['status', 'estado']
+            };
+            
+            for (const [supabaseCol, keywords] of Object.entries(flexibleMap)) {
+                if (columnMapping[supabaseCol] === undefined) {
+                    for (const kw of keywords) {
+                        const idx = headersLower.findIndex(h => h.includes(kw));
+                        if (idx !== -1) {
+                            columnMapping[supabaseCol] = idx;
                             break;
-                        } else if (header.includes(keyword)) {
-                            score = Math.max(score, keyword.length);
                         }
                     }
-                    
-                    if (score > bestScore) {
-                        bestScore = score;
-                        bestMatch = i;
-                    }
-                }
-                
-                if (bestMatch !== -1 && bestScore > 0) {
-                    columnMapping[supabaseCol] = bestMatch;
                 }
             }
         }
@@ -363,25 +353,25 @@
         function showMapping() {
             const grid = document.getElementById('mappingGrid');
             const labels = {
-                'tracking_code': '📦 Código de seguimiento',
-                'client_name': '👤 Nombre del cliente',
-                'client_phone': ' Teléfono',
-                'client_address': ' Dirección de entrega',
-                'status': ' Estado',
-                'notes': ' Notas/Observaciones',
-                'price': '💵 Precio/COD',
-                'delivery_date': '📅 Fecha de entrega',
-                'assigned_to': '🚚 Asignado a',
-                'scheduled_date': '📅 Fecha programada',
-                'completed_date': '✅ Fecha completada',
-                'saved_date': '💾 Fecha guardada',
-                'delivery_time': ' Hora de entrega',
-                'product_info': '📦 Info del producto',
+                'tracking_code': '📦 Código',
+                'client_name': '👤 Cliente',
+                'client_phone': '📞 Teléfono',
+                'client_address': '📍 Dirección',
+                'store': '🏪 Tienda',
+                'notes': '📝 Notas/Producto',
+                'price': '💵 COD/Precio',
                 'zone': '📍 Zona',
-                'store': '🏪 Tienda/Origen',
+                'delivery_date': '📅 Fecha',
+                'status': '📊 Estado',
+                'product_info': '📦 Info Producto',
+                'assigned_to': '🚚 Asignado',
+                'scheduled_date': ' Programada',
+                'completed_date': '✅ Completada',
+                'saved_date': '💾 Guardada',
+                'delivery_time': '⏰ Hora',
                 'is_vip': '⭐ VIP',
                 'color_mark': '🎨 Color',
-                'wa_estado': '💬 Estado WhatsApp'
+                'wa_estado': '💬 WA Estado'
             };
             
             let html = '';
@@ -417,11 +407,9 @@
             if (missingRequired.length > 0) {
                 preview.innerHTML = `
                     <div style="padding: 20px; background: #FFEBEE; color: #C62828; border-radius: 10px; text-align: center;">
-                        <div style="font-size: 2em; margin-bottom: 10px;">⚠️</div>
+                        <div style="font-size: 2em; margin-bottom: 10px;">️</div>
                         <strong>Faltan columnas requeridas:</strong><br><br>
                         ${missingRequired.map(f => `• ${f}`).join('<br>')}
-                        <br><br>
-                        <small>Selecciona las columnas correspondientes en el mapeo de arriba</small>
                     </div>`;
                 return;
             }
@@ -462,7 +450,7 @@
             );
             
             if (missingRequired.length > 0) {
-                showError(' Debes mapear las columnas requeridas: ' + missingRequired.join(', '));
+                showError('❌ Faltan columnas: ' + missingRequired.join(', '));
                 return;
             }
             
@@ -509,7 +497,7 @@
             link.click();
             document.body.removeChild(link);
             
-            showSuccess(`✅ CSV descargado con ${excelData.length} filas. Columnas: ${headers.join(', ')}`);
+            showSuccess(`✅ CSV listo (${excelData.length} filas). ¡Impórtalo en Supabase!`);
         }
 
         function showSuccess(msg) {
