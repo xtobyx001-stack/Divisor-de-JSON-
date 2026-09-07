@@ -7,50 +7,176 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #FF6B00 0%, #E55A00 100%); min-height: 100vh; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 20px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-        h1 { color: #0D1B4A; text-align: center; margin-bottom: 10px; }
-        .subtitle { text-align: center; color: #666; margin-bottom: 30px; }
-        .upload-box { border: 3px dashed #FF6B00; border-radius: 12px; padding: 40px; text-align: center; background: #FFF5EB; cursor: pointer; transition: all 0.3s; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            background: linear-gradient(135deg, #FF6B00 0%, #E55A00 100%); 
+            min-height: 100vh; 
+            padding: 20px; 
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 20px; 
+            padding: 40px; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3); 
+        }
+        h1 { color: #0D1B4A; text-align: center; margin-bottom: 10px; font-size: 1.8em; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 30px; font-size: 0.95em; }
+        
+        .upload-box { 
+            border: 3px dashed #FF6B00; 
+            border-radius: 12px; 
+            padding: 40px; 
+            text-align: center; 
+            background: #FFF5EB; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+            margin-bottom: 20px;
+        }
         .upload-box:hover { background: #FFE8D6; border-color: #E55A00; }
-        .upload-box.dragover { background: #FFE8D6; border-color: #0D1B4A; }
-        .icon { font-size: 4em; margin-bottom: 15px; }
+        .upload-box.dragover { background: #FFE8D6; border-color: #0D1B4A; transform: scale(1.02); }
+        .icon { font-size: 4em; margin-bottom: 15px; display: block; }
         input[type="file"] { display: none; }
-        .btn { background: linear-gradient(135deg, #FF6B00 0%, #E55A00 100%); color: white; padding: 15px 30px; border: none; border-radius: 10px; font-size: 1em; font-weight: 700; cursor: pointer; margin-top: 20px; width: 100%; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .btn { 
+            background: linear-gradient(135deg, #FF6B00 0%, #E55A00 100%); 
+            color: white; 
+            padding: 15px 30px; 
+            border: none; 
+            border-radius: 10px; 
+            font-size: 1em; 
+            font-weight: 700; 
+            cursor: pointer; 
+            margin-top: 20px; 
+            width: 100%; 
+            transition: all 0.2s;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,107,0,0.4); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
         .mapping { margin-top: 30px; display: none; }
-        .mapping.show { display: block; }
-        .mapping h3 { color: #0D1B4A; margin-bottom: 15px; }
-        .mapping-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .mapping-item { background: #f8f9fa; padding: 15px; border-radius: 8px; }
-        .mapping-item label { display: block; font-weight: 700; color: #333; margin-bottom: 5px; font-size: 0.9em; }
-        .mapping-item select { width: 100%; padding: 8px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 0.9em; }
-        .preview { max-height: 300px; overflow-y: auto; margin-top: 20px; border: 1px solid #e0e0e0; border-radius: 8px; }
+        .mapping.show { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .mapping h3 { color: #0D1B4A; margin-bottom: 10px; font-size: 1.3em; }
+        .mapping > p { color: #666; margin-bottom: 20px; font-size: 0.9em; line-height: 1.5; }
+        
+        .mapping-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+            gap: 15px; 
+            margin-bottom: 25px; 
+        }
+        .mapping-item { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 10px; 
+            border-left: 4px solid #FF6B00;
+        }
+        .mapping-item label { 
+            display: block; 
+            font-weight: 700; 
+            color: #333; 
+            margin-bottom: 8px; 
+            font-size: 0.9em; 
+        }
+        .mapping-item select { 
+            width: 100%; 
+            padding: 10px; 
+            border: 2px solid #e0e0e0; 
+            border-radius: 8px; 
+            font-size: 0.9em; 
+            background: white;
+            transition: border-color 0.3s;
+        }
+        .mapping-item select:focus { outline: none; border-color: #FF6B00; }
+        
+        .preview { 
+            max-height: 300px; 
+            overflow-y: auto; 
+            margin-top: 20px; 
+            border: 1px solid #e0e0e0; 
+            border-radius: 10px; 
+            background: white;
+        }
         table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
-        th { background: #FF6B00; color: white; padding: 10px; text-align: left; position: sticky; top: 0; }
-        td { padding: 8px; border-bottom: 1px solid #eee; }
-        .success { background: #11998e; color: white; padding: 15px; border-radius: 10px; margin-top: 20px; display: none; }
+        th { 
+            background: #FF6B00; 
+            color: white; 
+            padding: 12px 10px; 
+            text-align: left; 
+            position: sticky; 
+            top: 0; 
+            font-weight: 700;
+        }
+        td { padding: 10px; border-bottom: 1px solid #eee; color: #333; }
+        tr:hover td { background: #FFF5EB; }
+        
+        .success { 
+            background: #11998e; 
+            color: white; 
+            padding: 15px 20px; 
+            border-radius: 10px; 
+            margin-top: 20px; 
+            display: none; 
+            font-weight: 600;
+            animation: slideIn 0.3s ease;
+        }
         .success.show { display: block; }
-        .error { background: #E53935; color: white; padding: 15px; border-radius: 10px; margin-top: 20px; display: none; }
+        .error { 
+            background: #E53935; 
+            color: white; 
+            padding: 15px 20px; 
+            border-radius: 10px; 
+            margin-top: 20px; 
+            display: none; 
+            font-weight: 600;
+            animation: slideIn 0.3s ease;
+        }
         .error.show { display: block; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .info-box {
+            background: #EBF4FF;
+            border: 1px solid #90BBF5;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 0.85em;
+            color: #1A56C4;
+            line-height: 1.6;
+        }
+        .info-box strong { display: block; margin-bottom: 5px; }
+        
+        @media (max-width: 600px) {
+            .container { padding: 25px 20px; }
+            h1 { font-size: 1.4em; }
+            .mapping-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🚚 Conversor Excel - Llega Ya</h1>
-        <p class="subtitle">Convierte tu Excel al formato de Supabase</p>
+        <p class="subtitle">Convierte tu Excel al formato exacto de Supabase</p>
+        
+        <div class="info-box">
+            <strong>📋 Columnas requeridas por Supabase:</strong>
+            tracking_code, client_name, client_phone, product_info, client_address, price
+        </div>
         
         <div class="upload-box" onclick="document.getElementById('fileInput').click()" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
-            <div class="icon">📊</div>
-            <h3>Arrastra tu archivo Excel aquí</h3>
-            <p>o haz clic para seleccionar</p>
-            <p style="font-size: 0.85em; color: #666; margin-top: 10px;">Formatos: .xlsx, .xls, .csv</p>
+            <span class="icon">📊</span>
+            <h3 style="margin-bottom: 8px;">Arrastra tu archivo Excel aquí</h3>
+            <p style="color: #666;">o haz clic para seleccionar</p>
+            <p style="font-size: 0.8em; color: #999; margin-top: 10px;">Formatos: .xlsx, .xls, .csv</p>
         </div>
         <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" onchange="handleFile(event)">
         
         <div id="mappingSection" class="mapping">
-            <h3> Mapeo de Columnas</h3>
-            <p style="color: #666; margin-bottom: 15px; font-size: 0.9em;">La app detectó automáticamente las columnas. Verifica que coincidan:</p>
+            <h3>🔗 Mapeo de Columnas</h3>
+            <p>La app detectó automáticamente las columnas. Verifica que coincidan con las de Supabase:</p>
             <div class="mapping-grid" id="mappingGrid"></div>
             <div class="preview" id="preview"></div>
             <button class="btn" onclick="convertAndDownload()">💾 Descargar CSV para Supabase</button>
@@ -64,6 +190,18 @@
         let excelData = [];
         let excelHeaders = [];
         let columnMapping = {};
+
+        // Columnas EXACTAS de la tabla packages en Supabase
+        const SUPABASE_COLUMNS = [
+            'tracking_code',
+            'client_name',
+            'client_phone',
+            'product_info',
+            'client_address',
+            'price'
+        ];
+
+        const REQUIRED_COLUMNS = ['tracking_code', 'client_name', 'client_phone', 'product_info'];
 
         function handleDrop(e) {
             e.preventDefault();
@@ -96,13 +234,14 @@
                     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                     const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
                     
-                    // Find header row
+                    // Buscar fila de encabezados
                     let headerRowIndex = 0;
-                    for (let i = 0; i < Math.min(10, jsonData.length); i++) {
+                    for (let i = 0; i < Math.min(15, jsonData.length); i++) {
                         const row = jsonData[i];
                         if (row && row.some(cell => {
                             const v = String(cell).toLowerCase().trim();
-                            return v.includes('code') || v.includes('name') || v.includes('contact') || v.includes('address');
+                            return v.includes('code') || v.includes('name') || v.includes('contact') || 
+                                   v.includes('address') || v.includes('price') || v.includes('note');
                         })) {
                             headerRowIndex = i;
                             break;
@@ -110,38 +249,38 @@
                     }
                     
                     excelHeaders = jsonData[headerRowIndex].map(h => String(h || '').trim());
-                    excelData = jsonData.slice(headerRowIndex + 1).filter(row => row.some(cell => String(cell).trim() !== ''));
+                    excelData = jsonData.slice(headerRowIndex + 1).filter(row => 
+                        row.some(cell => String(cell).trim() !== '')
+                    );
                     
                     if (excelData.length === 0) {
-                        showError('No se encontraron datos en el archivo');
+                        showError(' No se encontraron datos en el archivo');
                         return;
                     }
                     
                     autoMapColumns();
                     showMapping();
-                    showSuccess(`✓ ${excelData.length} filas detectadas`);
+                    showSuccess(`✅ ${excelData.length} filas detectadas correctamente`);
                 } catch (err) {
-                    showError('Error al leer el archivo: ' + err.message);
+                    showError(' Error al leer el archivo: ' + err.message);
                 }
             };
             reader.readAsArrayBuffer(file);
         }
 
         function autoMapColumns() {
-            const mapping = {
-                'tracking_code': ['code', 'tracking', 'order', 'id'],
-                'client_name': ['customer name', 'contact name', 'name', 'client', 'dropoff contact name'],
-                'client_phone': ['dropoff contact', 'phone', 'teléfono', 'telefono', 'contact', 'cell'],
-                'product_info': ['note', 'product', 'descripcion', 'description', 'item', 'producto'],
-                'client_address': ['drop off address', 'dropoff address', 'address', 'direccion', 'delivery'],
-                'price': ['cod', 'price', 'monto', 'amount', 'total', 'precio'],
-                'zone': ['zone', 'zona', 'city', 'ciudad', 'area'],
-                'store': ['pickup', 'store', 'tienda', 'origen', 'warehouse']
+            const keywordMap = {
+                'tracking_code': ['code', 'tracking', 'order', 'id', 'tracking_code'],
+                'client_name': ['customer name', 'contact name', 'name', 'client', 'dropoff contact name', 'cliente'],
+                'client_phone': ['dropoff contact', 'phone', 'teléfono', 'telefono', 'contact', 'cell', 'whatsapp'],
+                'product_info': ['note', 'product', 'descripcion', 'description', 'item', 'producto', 'details'],
+                'client_address': ['drop off address', 'dropoff address', 'address', 'direccion', 'delivery', 'ubicacion'],
+                'price': ['cod', 'price', 'monto', 'amount', 'total', 'precio', 'cost']
             };
             
             const headersLower = excelHeaders.map(h => h.toLowerCase().trim());
             
-            for (const [supabaseCol, keywords] of Object.entries(mapping)) {
+            for (const [supabaseCol, keywords] of Object.entries(keywordMap)) {
                 for (const keyword of keywords) {
                     const idx = headersLower.findIndex(h => h.includes(keyword));
                     if (idx !== -1) {
@@ -157,20 +296,21 @@
             const labels = {
                 'tracking_code': '📦 Código de seguimiento',
                 'client_name': '👤 Nombre del cliente',
-                'client_phone': ' Teléfono',
-                'product_info': '📝 Producto/Nota',
+                'client_phone': '📞 Teléfono',
+                'product_info': '📝 Producto / Nota',
                 'client_address': '📍 Dirección de entrega',
-                'price': '💵 Precio/COD',
-                'zone': ' Zona',
-                'store': ' Tienda/Origen'
+                'price': '💵 Precio / COD'
             };
             
             let html = '';
-            for (const [supabaseCol, label] of Object.entries(labels)) {
+            for (const supabaseCol of SUPABASE_COLUMNS) {
+                const label = labels[supabaseCol];
                 const currentMapping = columnMapping[supabaseCol] !== undefined ? columnMapping[supabaseCol] : '';
+                const isRequired = REQUIRED_COLUMNS.includes(supabaseCol);
+                
                 html += `
-                    <div class="mapping-item">
-                        <label>${label}</label>
+                    <div class="mapping-item" style="${isRequired ? 'border-left-color: #E53935;' : ''}">
+                        <label>${label} ${isRequired ? '<span style="color:#E53935;font-size:0.8em;">*</span>' : ''}</label>
                         <select id="map_${supabaseCol}" onchange="columnMapping['${supabaseCol}'] = this.value">
                             <option value="">-- No asignar --</option>
                             ${excelHeaders.map((h, i) => `
@@ -182,63 +322,88 @@
             }
             grid.innerHTML = html;
             
-            // Show preview
             showPreview();
             document.getElementById('mappingSection').classList.add('show');
         }
 
         function showPreview() {
             const preview = document.getElementById('preview');
-            const requiredFields = ['tracking_code', 'client_name', 'client_phone', 'product_info'];
-            const missingRequired = requiredFields.filter(f => columnMapping[f] === undefined || columnMapping[f] === '');
+            const missingRequired = REQUIRED_COLUMNS.filter(f => 
+                columnMapping[f] === undefined || columnMapping[f] === ''
+            );
             
             if (missingRequired.length > 0) {
-                preview.innerHTML = `<div style="padding: 15px; background: #FFEBEE; color: #C62828; border-radius: 8px;">
-                    <strong>⚠️ Faltan columnas requeridas:</strong><br>
-                    ${missingRequired.map(f => '• ' + f).join('<br>')}
-                </div>`;
+                preview.innerHTML = `
+                    <div style="padding: 20px; background: #FFEBEE; color: #C62828; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 2em; margin-bottom: 10px;">⚠️</div>
+                        <strong>Faltan columnas requeridas:</strong><br><br>
+                        ${missingRequired.map(f => `• ${f}`).join('<br>')}
+                        <br><br>
+                        <small>Selecciona las columnas correspondientes en el mapeo de arriba</small>
+                    </div>`;
                 return;
             }
             
             let html = '<table><thead><tr>';
-            html += Object.keys(columnMapping).filter(k => columnMapping[k] !== undefined && columnMapping[k] !== '').map(k => `<th>${k}</th>`).join('');
+            const activeHeaders = SUPABASE_COLUMNS.filter(k => 
+                columnMapping[k] !== undefined && columnMapping[k] !== ''
+            );
+            html += activeHeaders.map(h => `<th>${h}</th>`).join('');
             html += '</tr></thead><tbody>';
             
             excelData.slice(0, 5).forEach(row => {
                 html += '<tr>';
-                for (const [supabaseCol, colIndex] of Object.entries(columnMapping)) {
-                    if (colIndex !== undefined && colIndex !== '') {
-                        html += `<td>${row[colIndex] || ''}</td>`;
-                    }
+                for (const header of activeHeaders) {
+                    const colIndex = columnMapping[header];
+                    let value = row[colIndex] || '';
+                    if (header === 'client_phone') value = String(value).replace(/\D/g, '');
+                    else if (header === 'price') value = parseFloat(String(value).replace(/[^0-9.]/g, '')) || 0;
+                    html += `<td>${value}</td>`;
                 }
                 html += '</tr>';
             });
             html += '</tbody></table>';
             
             if (excelData.length > 5) {
-                html += `<div style="padding: 10px; text-align: center; color: #666; font-size: 0.85em;">... y ${excelData.length - 5} filas más</div>`;
+                html += `<div style="padding: 12px; text-align: center; color: #666; font-size: 0.85em; background: #f8f9fa;">
+                    ... y ${excelData.length - 5} filas más
+                </div>`;
             }
             
             preview.innerHTML = html;
         }
 
         function convertAndDownload() {
-            const requiredFields = ['tracking_code', 'client_name', 'client_phone', 'product_info'];
-            const missingRequired = requiredFields.filter(f => columnMapping[f] === undefined || columnMapping[f] === '');
+            const missingRequired = REQUIRED_COLUMNS.filter(f => 
+                columnMapping[f] === undefined || columnMapping[f] === ''
+            );
             
             if (missingRequired.length > 0) {
-                showError('Debes mapear las columnas requeridas: ' + missingRequired.join(', '));
+                showError('❌ Debes mapear las columnas requeridas: ' + missingRequired.join(', '));
                 return;
             }
             
             const csvRows = [];
-            const headers = Object.keys(columnMapping).filter(k => columnMapping[k] !== undefined && columnMapping[k] !== '');
+            const headers = SUPABASE_COLUMNS.filter(col => 
+                columnMapping[col] !== undefined && columnMapping[col] !== ''
+            );
             csvRows.push(headers.join(','));
             
             excelData.forEach(row => {
                 const values = headers.map(header => {
                     const colIndex = columnMapping[header];
                     let value = row[colIndex] || '';
+                    
+                    // Limpiar datos según tipo
+                    if (header === 'client_phone') {
+                        value = String(value).replace(/\D/g, '');
+                    } else if (header === 'price') {
+                        value = parseFloat(String(value).replace(/[^0-9.]/g, '')) || 0;
+                    } else {
+                        value = String(value).trim();
+                    }
+                    
+                    // Escapar comillas para CSV válido
                     value = String(value).replace(/"/g, '""');
                     if (value.includes(',') || value.includes('"') || value.includes('\n')) {
                         value = `"${value}"`;
@@ -248,8 +413,8 @@
                 csvRows.push(values.join(','));
             });
             
-            const csvContent = csvRows.join('\n');
-            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const csvContent = '\uFEFF' + csvRows.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
@@ -259,21 +424,21 @@
             link.click();
             document.body.removeChild(link);
             
-            showSuccess('✅ Archivo CSV descargado. Ahora impórtalo en Supabase.');
+            showSuccess(`✅ CSV descargado con ${excelData.length} filas. Columnas: ${headers.join(', ')}`);
         }
 
         function showSuccess(msg) {
             const el = document.getElementById('successMsg');
             el.textContent = msg;
             el.classList.add('show');
-            setTimeout(() => el.classList.remove('show'), 5000);
+            setTimeout(() => el.classList.remove('show'), 6000);
         }
 
         function showError(msg) {
             const el = document.getElementById('errorMsg');
             el.textContent = msg;
             el.classList.add('show');
-            setTimeout(() => el.classList.remove('show'), 5000);
+            setTimeout(() => el.classList.remove('show'), 6000);
         }
     </script>
 </body>
