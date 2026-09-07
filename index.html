@@ -14,7 +14,7 @@
             padding: 20px; 
         }
         .container { 
-            max-width: 800px; 
+            max-width: 900px; 
             margin: 0 auto; 
             background: white; 
             border-radius: 20px; 
@@ -64,7 +64,7 @@
         
         .mapping-grid { 
             display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
             gap: 15px; 
             margin-bottom: 25px; 
         }
@@ -162,8 +162,8 @@
         <p class="subtitle">Convierte tu Excel al formato exacto de Supabase</p>
         
         <div class="info-box">
-            <strong>📋 Columnas requeridas por Supabase:</strong>
-            tracking_code, client_name, client_phone, product_info, client_address, price
+            <strong> Columnas de la tabla packages:</strong>
+            tracking_code, client_name, client_phone, client_address, status, notes, price, delivery_date, assigned_to, scheduled_date, completed_date, saved_date, delivery_time, product_info, zone, store, is_vip, color_mark, wa_estado
         </div>
         
         <div class="upload-box" onclick="document.getElementById('fileInput').click()" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
@@ -176,7 +176,7 @@
         
         <div id="mappingSection" class="mapping">
             <h3>🔗 Mapeo de Columnas</h3>
-            <p>La app detectó automáticamente las columnas. Verifica que coincidan con las de Supabase:</p>
+            <p>La app detectó automáticamente las columnas. Verifica que coincidan:</p>
             <div class="mapping-grid" id="mappingGrid"></div>
             <div class="preview" id="preview"></div>
             <button class="btn" onclick="convertAndDownload()">💾 Descargar CSV para Supabase</button>
@@ -196,12 +196,25 @@
             'tracking_code',
             'client_name',
             'client_phone',
-            'product_info',
             'client_address',
-            'price'
+            'status',
+            'notes',
+            'price',
+            'delivery_date',
+            'assigned_to',
+            'scheduled_date',
+            'completed_date',
+            'saved_date',
+            'delivery_time',
+            'product_info',
+            'zone',
+            'store',
+            'is_vip',
+            'color_mark',
+            'wa_estado'
         ];
 
-        const REQUIRED_COLUMNS = ['tracking_code', 'client_name', 'client_phone', 'product_info'];
+        const REQUIRED_COLUMNS = ['tracking_code', 'client_name', 'client_phone'];
 
         function handleDrop(e) {
             e.preventDefault();
@@ -241,7 +254,8 @@
                         if (row && row.some(cell => {
                             const v = String(cell).toLowerCase().trim();
                             return v.includes('code') || v.includes('name') || v.includes('contact') || 
-                                   v.includes('address') || v.includes('price') || v.includes('note');
+                                   v.includes('address') || v.includes('price') || v.includes('note') ||
+                                   v.includes('customer') || v.includes('order');
                         })) {
                             headerRowIndex = i;
                             break;
@@ -254,7 +268,7 @@
                     );
                     
                     if (excelData.length === 0) {
-                        showError(' No se encontraron datos en el archivo');
+                        showError('❌ No se encontraron datos en el archivo');
                         return;
                     }
                     
@@ -262,7 +276,7 @@
                     showMapping();
                     showSuccess(`✅ ${excelData.length} filas detectadas correctamente`);
                 } catch (err) {
-                    showError(' Error al leer el archivo: ' + err.message);
+                    showError('❌ Error al leer el archivo: ' + err.message);
                 }
             };
             reader.readAsArrayBuffer(file);
@@ -270,12 +284,17 @@
 
         function autoMapColumns() {
             const keywordMap = {
-                'tracking_code': ['code', 'tracking', 'order', 'id', 'tracking_code'],
-                'client_name': ['customer name', 'contact name', 'name', 'client', 'dropoff contact name', 'cliente'],
-                'client_phone': ['dropoff contact', 'phone', 'teléfono', 'telefono', 'contact', 'cell', 'whatsapp'],
-                'product_info': ['note', 'product', 'descripcion', 'description', 'item', 'producto', 'details'],
-                'client_address': ['drop off address', 'dropoff address', 'address', 'direccion', 'delivery', 'ubicacion'],
-                'price': ['cod', 'price', 'monto', 'amount', 'total', 'precio', 'cost']
+                'tracking_code': ['code', 'tracking', 'order', 'id', 'tracking_code', 'order_id'],
+                'client_name': ['customer name', 'contact name', 'name', 'client', 'dropoff contact name', 'cliente', 'recipient'],
+                'client_phone': ['dropoff contact', 'phone', 'teléfono', 'telefono', 'contact', 'cell', 'whatsapp', 'mobile'],
+                'client_address': ['drop off address', 'dropoff address', 'address', 'direccion', 'delivery address', 'ubicacion', 'location'],
+                'notes': ['note', 'notes', 'remark', 'comments', 'observaciones', 'notas'],
+                'price': ['cod', 'price', 'monto', 'amount', 'total', 'precio', 'cost', 'valor'],
+                'delivery_date': ['delivery date', 'fecha entrega', 'expected date', 'date'],
+                'assigned_to': ['assigned', 'driver', 'chofer', 'repartidor', 'courier'],
+                'product_info': ['product', 'producto', 'item', 'description', 'descripcion', 'details'],
+                'zone': ['zone', 'zona', 'city', 'ciudad', 'area', 'sector'],
+                'store': ['store', 'tienda', 'pickup', 'origen', 'warehouse', 'sucursal']
             };
             
             const headersLower = excelHeaders.map(h => h.toLowerCase().trim());
@@ -294,12 +313,25 @@
         function showMapping() {
             const grid = document.getElementById('mappingGrid');
             const labels = {
-                'tracking_code': '📦 Código de seguimiento',
+                'tracking_code': ' Código de seguimiento',
                 'client_name': '👤 Nombre del cliente',
                 'client_phone': '📞 Teléfono',
-                'product_info': '📝 Producto / Nota',
                 'client_address': '📍 Dirección de entrega',
-                'price': '💵 Precio / COD'
+                'status': '📊 Estado',
+                'notes': '📝 Notas/Observaciones',
+                'price': '💵 Precio/COD',
+                'delivery_date': ' Fecha de entrega',
+                'assigned_to': '🚚 Asignado a',
+                'scheduled_date': '📅 Fecha programada',
+                'completed_date': '✅ Fecha completada',
+                'saved_date': ' Fecha guardada',
+                'delivery_time': '⏰ Hora de entrega',
+                'product_info': '📦 Info del producto',
+                'zone': '📍 Zona',
+                'store': '🏪 Tienda/Origen',
+                'is_vip': '⭐ VIP',
+                'color_mark': '🎨 Color',
+                'wa_estado': '💬 Estado WhatsApp'
             };
             
             let html = '';
@@ -358,6 +390,7 @@
                     let value = row[colIndex] || '';
                     if (header === 'client_phone') value = String(value).replace(/\D/g, '');
                     else if (header === 'price') value = parseFloat(String(value).replace(/[^0-9.]/g, '')) || 0;
+                    else if (header === 'is_vip') value = String(value).toLowerCase() === 'true' || String(value) === '1' || String(value).toLowerCase() === 'si';
                     html += `<td>${value}</td>`;
                 }
                 html += '</tr>';
@@ -399,6 +432,10 @@
                         value = String(value).replace(/\D/g, '');
                     } else if (header === 'price') {
                         value = parseFloat(String(value).replace(/[^0-9.]/g, '')) || 0;
+                    } else if (header === 'is_vip') {
+                        value = (String(value).toLowerCase() === 'true' || String(value) === '1' || String(value).toLowerCase() === 'si') ? 'true' : 'false';
+                    } else if (header === 'status' && !value) {
+                        value = 'pending'; // Valor por defecto
                     } else {
                         value = String(value).trim();
                     }
