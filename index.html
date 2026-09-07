@@ -235,32 +235,33 @@
                     // Buscar la fila REAL de encabezados
                     let headerRowIndex = -1;
                     
-                    // Estrategia 1: Buscar fila con múltiples columnas de texto significativo
-                    for (let i = 0; i < Math.min(20, jsonData.length); i++) {
+                    // Estrategia 1: Buscar fila que tenga columnas con nombres específicos de datos
+                    const expectedHeaders = ['code', 'created', 'price', 'cod', 'customer', 'zone', 'pickup', 'note', 'dropoff', 'address'];
+                    
+                    for (let i = 0; i < Math.min(10, jsonData.length); i++) {
                         const row = jsonData[i];
-                        if (!row || row.length < 3) continue;
+                        if (!row || row.length < 5) continue;
                         
-                        let meaningfulCells = 0;
+                        // Contar cuántas celdas coinciden con los encabezados esperados
+                        let matchCount = 0;
                         row.forEach(cell => {
-                            const val = String(cell).trim();
-                            if (val && 
-                                !val.match(/^\d{4}-\d{2}-\d{2}/) &&
-                                !val.match(/^\d+$/) &&
-                                val.length > 2) {
-                                meaningfulCells++;
+                            const val = String(cell).toLowerCase().trim();
+                            if (expectedHeaders.some(exp => val.includes(exp))) {
+                                matchCount++;
                             }
                         });
                         
-                        if (meaningfulCells >= 5) {
+                        // Si al menos 7 columnas coinciden, es la fila de encabezados
+                        if (matchCount >= 7) {
                             headerRowIndex = i;
                             break;
                         }
                     }
                     
-                    // Estrategia 2: Buscar por palabras clave
+                    // Estrategia 2: Si no encontró, buscar por palabras clave genéricas
                     if (headerRowIndex === -1) {
                         const keywords = ['code', 'name', 'phone', 'address', 'customer', 'contact', 'price', 'amount'];
-                        for (let i = 0; i < Math.min(20, jsonData.length); i++) {
+                        for (let i = 0; i < Math.min(10, jsonData.length); i++) {
                             const row = jsonData[i];
                             if (row && row.some(cell => {
                                 const val = String(cell).toLowerCase().trim();
@@ -272,9 +273,19 @@
                         }
                     }
                     
-                    // Estrategia 3: Usar segunda fila si la primera parece título
+                    // Estrategia 3: Usar segunda fila si la primera parece ser título del reporte
                     if (headerRowIndex === -1 && jsonData.length > 1) {
-                        headerRowIndex = 1;
+                        const firstRow = jsonData[0];
+                        const isFirstRowTitle = firstRow && firstRow.some(cell => 
+                            String(cell).toLowerCase().includes('report') || 
+                            String(cell).toLowerCase().includes('order')
+                        );
+                        
+                        if (isFirstRowTitle) {
+                            headerRowIndex = 1;
+                        } else {
+                            headerRowIndex = 0;
+                        }
                     }
                     
                     if (headerRowIndex === -1) {
@@ -296,7 +307,7 @@
                     showMapping();
                     showSuccess(`✅ ${excelData.length} filas detectadas (encabezados en fila ${headerRowIndex + 1})`);
                 } catch (err) {
-                    showError(' Error al leer el archivo: ' + err.message);
+                    showError('❌ Error al leer el archivo: ' + err.message);
                 }
             };
             reader.readAsArrayBuffer(file);
@@ -304,17 +315,17 @@
 
         function autoMapColumns() {
             const keywordMap = {
-                'tracking_code': ['code', 'tracking', 'order', 'id', 'tracking_code', 'order_id', 'order number', 'order_no'],
-                'client_name': ['customer name', 'contact name', 'name', 'client', 'dropoff contact name', 'cliente', 'recipient', 'full name'],
-                'client_phone': ['dropoff contact', 'phone', 'teléfono', 'telefono', 'contact', 'cell', 'whatsapp', 'mobile', 'telephone'],
-                'client_address': ['drop off address', 'dropoff address', 'address', 'direccion', 'delivery address', 'ubicacion', 'location', 'street'],
-                'notes': ['note', 'notes', 'remark', 'comments', 'observaciones', 'notas', 'description', 'details'],
-                'price': ['cod', 'price', 'monto', 'amount', 'total', 'precio', 'cost', 'valor', 'charge'],
-                'delivery_date': ['delivery date', 'fecha entrega', 'expected date', 'date', 'scheduled'],
-                'assigned_to': ['assigned', 'driver', 'chofer', 'repartidor', 'courier', 'deliverer'],
-                'product_info': ['product', 'producto', 'item', 'description', 'descripcion', 'details', 'goods'],
-                'zone': ['zone', 'zona', 'city', 'ciudad', 'area', 'sector', 'region'],
-                'store': ['store', 'tienda', 'pickup', 'origen', 'warehouse', 'sucursal', 'branch']
+                'tracking_code': ['code', 'tracking', 'order', 'id', 'tracking_code', 'order_id'],
+                'client_name': ['customer name', 'contact name', 'name', 'client', 'dropoff contact name', 'cliente', 'recipient'],
+                'client_phone': ['dropoff contact', 'phone', 'teléfono', 'telefono', 'contact', 'cell', 'whatsapp', 'mobile'],
+                'client_address': ['drop off address', 'dropoff address', 'address', 'direccion', 'delivery address', 'ubicacion'],
+                'notes': ['note', 'notes', 'remark', 'comments', 'observaciones', 'notas'],
+                'price': ['cod', 'price', 'monto', 'amount', 'total', 'precio', 'cost'],
+                'delivery_date': ['created at', 'delivery date', 'fecha entrega', 'expected date', 'date'],
+                'assigned_to': ['assigned', 'driver', 'chofer', 'repartidor', 'courier'],
+                'product_info': ['product', 'producto', 'item', 'description', 'descripcion', 'details'],
+                'zone': ['zone', 'zona', 'city', 'ciudad', 'area', 'sector'],
+                'store': ['pickup address', 'store', 'tienda', 'pickup', 'origen', 'warehouse']
             };
             
             const headersLower = excelHeaders.map(h => h.toLowerCase().trim());
@@ -354,20 +365,20 @@
             const labels = {
                 'tracking_code': '📦 Código de seguimiento',
                 'client_name': '👤 Nombre del cliente',
-                'client_phone': '📞 Teléfono',
-                'client_address': '📍 Dirección de entrega',
+                'client_phone': ' Teléfono',
+                'client_address': ' Dirección de entrega',
                 'status': ' Estado',
-                'notes': '📝 Notas/Observaciones',
-                'price': ' Precio/COD',
+                'notes': ' Notas/Observaciones',
+                'price': '💵 Precio/COD',
                 'delivery_date': '📅 Fecha de entrega',
                 'assigned_to': '🚚 Asignado a',
                 'scheduled_date': '📅 Fecha programada',
                 'completed_date': '✅ Fecha completada',
                 'saved_date': '💾 Fecha guardada',
-                'delivery_time': '⏰ Hora de entrega',
-                'product_info': ' Info del producto',
-                'zone': ' Zona',
-                'store': ' Tienda/Origen',
+                'delivery_time': ' Hora de entrega',
+                'product_info': '📦 Info del producto',
+                'zone': '📍 Zona',
+                'store': '🏪 Tienda/Origen',
                 'is_vip': '⭐ VIP',
                 'color_mark': '🎨 Color',
                 'wa_estado': '💬 Estado WhatsApp'
@@ -451,7 +462,7 @@
             );
             
             if (missingRequired.length > 0) {
-                showError('❌ Debes mapear las columnas requeridas: ' + missingRequired.join(', '));
+                showError(' Debes mapear las columnas requeridas: ' + missingRequired.join(', '));
                 return;
             }
             
