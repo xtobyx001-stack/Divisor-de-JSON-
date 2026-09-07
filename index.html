@@ -1,806 +1,280 @@
 <!DOCTYPE html>
-
-<html lang="es" style="background:#0d0d0d!important">
+<html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Llega Ya — Divisor de Rutas</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
-<!-- SheetJS para leer y escribir Excel -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<style>
-  html, body {
-    background-color: #0d0d0d !important;
-    color: #f0f0f0 !important;
-    font-family: 'Syne', sans-serif !important;
-    min-height: 100vh !important;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-body { padding: 2rem; background-color: #0d0d0d !important; }
-
-header {
-display: flex;
-align-items: flex-end;
-gap: 1.5rem;
-margin-bottom: 3rem;
-border-bottom: 1px solid #2a2a2a;
-padding-bottom: 1.5rem;
-}
-
-.logo {
-font-family: ‘Space Mono’, monospace;
-font-size: 0.65rem;
-color: #e8ff47 !important;
-letter-spacing: 0.2em;
-text-transform: uppercase;
-border: 1px solid #e8ff47;
-padding: 0.25rem 0.5rem;
-background: #0d0d0d !important;
-}
-
-h1 {
-font-size: clamp(1.8rem, 4vw, 3rem);
-font-weight: 800;
-line-height: 1;
-letter-spacing: -0.03em;
-color: #f0f0f0 !important;
-}
-
-h1 span { color: #e8ff47 !important; }
-
-.btn-reset {
-margin-left: auto;
-background: #0d0d0d !important;
-border: 1px solid #3a3a3a;
-color: #666 !important;
-width: 36px;
-height: 36px;
-border-radius: 50%;
-cursor: pointer;
-display: flex;
-align-items: center;
-justify-content: center;
-font-size: 1.1rem;
-transition: border-color 0.2s, color 0.2s, transform 0.4s;
-flex-shrink: 0;
-}
-.btn-reset:hover { border-color: #ff4444; color: #ff4444 !important; transform: rotate(90deg); }
-.btn-reset:active { transform: rotate(180deg); }
-
-.modal-overlay {
-position: fixed; inset: 0;
-background: rgba(0,0,0,0.8) !important;
-display: flex; align-items: center; justify-content: center;
-z-index: 100;
-opacity: 0; pointer-events: none;
-transition: opacity 0.2s;
-}
-.modal-overlay.open { opacity: 1; pointer-events: all; }
-
-.modal {
-background: #161616 !important;
-border: 1px solid #3a3a3a;
-border-radius: 6px;
-padding: 2rem;
-width: 320px;
-text-align: center;
-transform: translateY(10px);
-transition: transform 0.2s;
-color: #f0f0f0 !important;
-}
-.modal-overlay.open .modal { transform: translateY(0); }
-.modal-icon { font-size: 2rem; margin-bottom: 0.75rem; display: block; }
-.modal h3 { font-size: 1rem; font-weight: 800; margin-bottom: 0.4rem; color: #f0f0f0 !important; }
-.modal p { font-family: ‘Space Mono’, monospace; font-size: 0.7rem; color: #666 !important; margin-bottom: 1.5rem; line-height: 1.6; }
-.modal-actions { display: flex; gap: 0.75rem; }
-.modal-actions button {
-flex: 1; padding: 0.6rem; border-radius: 2px;
-font-family: ‘Space Mono’, monospace; font-size: 0.7rem;
-letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
-}
-.btn-cancel { background: #0d0d0d !important; border: 1px solid #2a2a2a; color: #666 !important; }
-.btn-confirm-reset { background: #ff4444 !important; border: 1px solid #ff4444; color: #fff !important; font-weight: 700; }
-
-.upload-zone {
-border: 2px dashed #2a2a2a;
-border-radius: 4px;
-padding: 3rem 2rem;
-text-align: center;
-cursor: pointer;
-transition: border-color 0.2s, background 0.2s;
-position: relative;
-margin-bottom: 2rem;
-background: #0d0d0d !important;
-}
-.upload-zone:hover, .upload-zone.drag { border-color: #e8ff47; background: #111 !important; }
-.upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-.upload-icon { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; }
-.upload-zone p { font-size: 0.9rem; color: #666 !important; font-family: ‘Space Mono’, monospace; }
-.upload-zone .file-name { margin-top: 0.5rem; color: #e8ff47 !important; font-weight: 700; font-family: ‘Space Mono’, monospace; font-size: 0.8rem; }
-
-.controls { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2.5rem; flex-wrap: wrap; }
-.control-block { display: flex; flex-direction: column; gap: 0.4rem; }
-
-label { font-family: ‘Space Mono’, monospace; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: #666 !important; }
-
-input[type=“number”] {
-background: #161616 !important;
-border: 1px solid #2a2a2a;
-color: #f0f0f0 !important;
-font-family: ‘Space Mono’, monospace;
-font-size: 1.4rem; font-weight: 700;
-padding: 0.5rem 1rem; width: 100px;
-border-radius: 2px; outline: none;
-}
-input[type=“number”]:focus { border-color: #e8ff47; }
-
-.stat-pill {
-background: #161616 !important;
-border: 1px solid #2a2a2a;
-padding: 0.5rem 1rem; border-radius: 2px;
-font-family: ‘Space Mono’, monospace; font-size: 0.75rem; color: #666 !important;
-}
-.stat-pill strong { color: #e8ff47 !important; font-size: 1.1rem; }
-
-.btn-divide {
-background: #e8ff47 !important;
-color: #000 !important;
-border: none; padding: 0.75rem 2rem;
-font-family: ‘Syne’, sans-serif; font-weight: 800; font-size: 0.9rem;
-letter-spacing: 0.05em; cursor: pointer; border-radius: 2px;
-transition: transform 0.1s; margin-left: auto;
-}
-.btn-divide:hover { background: #d4e83a !important; transform: translateY(-1px); }
-.btn-divide:disabled { opacity: 0.3; cursor: not-allowed; }
-
-.results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
-.results-header h2 { font-size: 1rem; font-weight: 700; font-family: ‘Space Mono’, monospace; color: #666 !important; letter-spacing: 0.1em; text-transform: uppercase; }
-
-.btn-download-all {
-background: #0d0d0d !important;
-border: 1px solid #ff6b35; color: #ff6b35 !important;
-padding: 0.4rem 1rem; font-family: ‘Space Mono’, monospace; font-size: 0.7rem;
-cursor: pointer; border-radius: 2px; letter-spacing: 0.1em; text-transform: uppercase;
-}
-.btn-download-all:hover { background: #ff6b35 !important; color: #000 !important; }
-
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
-
-.column-card {
-background: #1a1a1a !important;
-border: 1px solid #2a2a2a; border-radius: 4px; overflow: hidden;
-animation: slideUp 0.3s ease both;
-}
-@keyframes slideUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
-
-.card-header {
-background: #161616 !important;
-padding: 0.75rem 1rem; display: flex; align-items: center;
-justify-content: space-between; border-bottom: 1px solid #2a2a2a;
-}
-.card-title { font-family: ‘Space Mono’, monospace; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #f0f0f0 !important; }
-.card-badge { background: #e8ff47 !important; color: #000 !important; font-family: ‘Space Mono’, monospace; font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 2px; }
-
-.card-body { padding: 0.75rem 1rem; max-height: 240px; overflow-y: auto; background: #1a1a1a !important; }
-.cliente-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.45rem 0; border-bottom: 1px solid #2a2a2a; font-size: 0.8rem; }
-.cliente-row:last-child { border-bottom: none; }
-.cliente-id { font-family: ‘Space Mono’, monospace; color: #e8ff47 !important; font-size: 0.65rem; min-width: 28px; text-align: right; }
-.cliente-nombre { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #f0f0f0 !important; }
-.cliente-tel { font-family: ‘Space Mono’, monospace; font-size: 0.62rem; color: #666 !important; }
-
-.card-footer { padding: 0.75rem 1rem; border-top: 1px solid #2a2a2a; background: #1a1a1a !important; }
-.btn-download {
-width: 100%; background: #1a1a1a !important;
-border: 1px solid #2a2a2a; color: #f0f0f0 !important;
-padding: 0.5rem; font-family: ‘Space Mono’, monospace; font-size: 0.7rem;
-cursor: pointer; border-radius: 2px; letter-spacing: 0.08em; text-transform: uppercase;
-display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-}
-.btn-download:hover { border-color: #e8ff47 !important; color: #e8ff47 !important; }
-
-.btn-download-ruta {
-width: 100%; background: #0d0d0d !important;
-border: 1px solid #e8ff47; color: #e8ff47 !important;
-padding: 0.5rem; font-family: ‘Space Mono’, monospace; font-size: 0.7rem;
-cursor: pointer; border-radius: 2px; letter-spacing: 0.08em; text-transform: uppercase;
-display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-margin-top: 0.5rem;
-}
-.btn-download-ruta:hover { background: #e8ff47 !important; color: #000 !important; }
-
-.empty {
-text-align: center; padding: 4rem 2rem; color: #666 !important;
-font-family: ‘Space Mono’, monospace; font-size: 0.8rem;
-border: 1px dashed #2a2a2a; border-radius: 4px;
-background: #0d0d0d !important;
-}
-.empty .big { font-size: 2rem; margin-bottom: 1rem; display: block; }
-
-.alert {
-background: rgba(255,107,53,0.1) !important;
-border: 1px solid #ff6b35; color: #ff6b35 !important;
-padding: 0.75rem 1rem; border-radius: 2px;
-font-family: ‘Space Mono’, monospace; font-size: 0.75rem;
-margin-bottom: 1.5rem; display: none;
-}
-
-/* ── Modal Renombrar + Formato ── */
-.input-nombre {
-width: 100%;
-background: #0d0d0d !important;
-border: 1px solid #e8ff47;
-color: #f0f0f0 !important;
-font-family: ‘Space Mono’, monospace;
-font-size: 0.85rem;
-padding: 0.6rem 0.75rem;
-border-radius: 2px;
-outline: none;
-margin-bottom: 1rem;
-}
-.ext-label {
-font-family: ‘Space Mono’, monospace;
-font-size: 0.65rem;
-color: #666 !important;
-margin-bottom: 0.5rem;
-display: block;
-text-align: left;
-}
-
-/* Selector de formato */
-.format-row {
-display: flex;
-gap: 0.5rem;
-margin-bottom: 1.25rem;
-}
-.fmt-btn {
-flex: 1;
-padding: 0.55rem 0.5rem;
-font-family: ‘Space Mono’, monospace;
-font-size: 0.72rem;
-font-weight: 700;
-letter-spacing: 0.08em;
-text-transform: uppercase;
-border-radius: 2px;
-cursor: pointer;
-border: 1px solid #2a2a2a;
-background: #0d0d0d !important;
-color: #666 !important;
-transition: border-color 0.15s, color 0.15s, background 0.15s;
-}
-.fmt-btn.active {
-border-color: #e8ff47;
-color: #000 !important;
-background: #e8ff47 !important;
-}
-.fmt-btn:not(.active):hover {
-border-color: #555;
-color: #ccc !important;
-}
-
-.btn-confirm-dl {
-background: #e8ff47 !important;
-border: 1px solid #e8ff47;
-color: #000 !important;
-font-weight: 700;
-}
-.btn-confirm-dl:hover { background: #d4e83a !important; }
-</style>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor Excel - Llega Ya</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #FF6B00 0%, #E55A00 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 20px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        h1 { color: #0D1B4A; text-align: center; margin-bottom: 10px; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 30px; }
+        .upload-box { border: 3px dashed #FF6B00; border-radius: 12px; padding: 40px; text-align: center; background: #FFF5EB; cursor: pointer; transition: all 0.3s; }
+        .upload-box:hover { background: #FFE8D6; border-color: #E55A00; }
+        .upload-box.dragover { background: #FFE8D6; border-color: #0D1B4A; }
+        .icon { font-size: 4em; margin-bottom: 15px; }
+        input[type="file"] { display: none; }
+        .btn { background: linear-gradient(135deg, #FF6B00 0%, #E55A00 100%); color: white; padding: 15px 30px; border: none; border-radius: 10px; font-size: 1em; font-weight: 700; cursor: pointer; margin-top: 20px; width: 100%; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .mapping { margin-top: 30px; display: none; }
+        .mapping.show { display: block; }
+        .mapping h3 { color: #0D1B4A; margin-bottom: 15px; }
+        .mapping-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .mapping-item { background: #f8f9fa; padding: 15px; border-radius: 8px; }
+        .mapping-item label { display: block; font-weight: 700; color: #333; margin-bottom: 5px; font-size: 0.9em; }
+        .mapping-item select { width: 100%; padding: 8px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 0.9em; }
+        .preview { max-height: 300px; overflow-y: auto; margin-top: 20px; border: 1px solid #e0e0e0; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
+        th { background: #FF6B00; color: white; padding: 10px; text-align: left; position: sticky; top: 0; }
+        td { padding: 8px; border-bottom: 1px solid #eee; }
+        .success { background: #11998e; color: white; padding: 15px; border-radius: 10px; margin-top: 20px; display: none; }
+        .success.show { display: block; }
+        .error { background: #E53935; color: white; padding: 15px; border-radius: 10px; margin-top: 20px; display: none; }
+        .error.show { display: block; }
+    </style>
 </head>
 <body>
-
-<header>
-  <div class="logo">Llega Ya</div>
-  <h1>Divisor de <span>Rutas</span></h1>
-  <button class="btn-reset" id="btnReset" title="Limpiar todo">⚙</button>
-</header>
-
-<!-- Modal: Limpiar sesión -->
-
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <span class="modal-icon">🗑</span>
-    <h3>Limpiar sesión</h3>
-    <p>Se eliminará el archivo cargado y todas las columnas generadas. ¿Continuar?</p>
-    <div class="modal-actions">
-      <button class="btn-cancel" id="btnCancel">Cancelar</button>
-      <button class="btn-confirm-reset" id="btnConfirmReset">Limpiar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Renombrar + Formato -->
-
-<div class="modal-overlay" id="modalRename">
-  <div class="modal">
-    <span class="modal-icon">✏️</span>
-    <h3>Guardar columna</h3>
-    <span class="ext-label">Nombre del archivo (sin extensión)</span>
-    <input class="input-nombre" type="text" id="inputNombre" placeholder="mi_ruta_columna_1">
-    <span class="ext-label">Formato de descarga</span>
-    <div class="format-row">
-      <button class="fmt-btn active" id="fmtJSON" onclick="setFormato('json')">JSON</button>
-      <button class="fmt-btn" id="fmtXLSX" onclick="setFormato('xlsx')">Excel .xlsx</button>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-cancel" id="btnCancelRename">Cancelar</button>
-      <button class="btn-confirm-dl" id="btnConfirmDl">↓ Descargar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Nombre JSON Ruta -->
-
-<div class="modal-overlay" id="modalRuta">
-  <div class="modal">
-    <span class="modal-icon">⚡</span>
-    <h3>Nombre del JSON Ruta</h3>
-    <span class="ext-label">Escribe el nombre (sin .json)</span>
-    <input class="input-nombre" type="text" id="inputNombreRuta" placeholder="ruta_columna_1">
-    <div class="modal-actions">
-      <button class="btn-cancel" id="btnCancelRuta">Cancelar</button>
-      <button class="btn-confirm-dl" id="btnConfirmRuta">⚡ Descargar</button>
-    </div>
-  </div>
-</div>
-
-<div class="upload-zone" id="dropZone">
-  <input type="file" id="fileInput" accept=".json,.xlsx,.xls">
-  <span class="upload-icon">📂</span>
-  <p>Arrastra tu archivo JSON o Excel (.xlsx / .xls) aquí</p>
-  <div class="file-name" id="fileName"></div>
-</div>
-
-<div class="alert" id="alert"></div>
-
-<div class="controls">
-  <div class="control-block">
-    <label>Divisiones</label>
-    <input type="number" id="numDivisions" value="2" min="1" max="100">
-  </div>
-  <div class="stat-pill" id="statTotal" style="display:none">
-    Total clientes: <strong id="totalCount">0</strong>
-  </div>
-  <div class="stat-pill" id="statPor" style="display:none">
-    Por columna: <strong id="porColumna">—</strong>
-  </div>
-  <button class="btn-divide" id="btnDivide" disabled>Dividir →</button>
-</div>
-
-<div id="resultsHeader" class="results-header" style="display:none">
-  <h2>Columnas generadas</h2>
-  <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:flex-end">
-    <button class="btn-download-all" id="btnDownloadAll">↓ Descargar todo</button>
-    <button class="btn-download-all" id="btnDownloadAllRuta" style="border-color:#e8ff47;color:#e8ff47">⚡ JSON Ruta todo</button>
-  </div>
-</div>
-
-<div id="results">
-  <div class="empty">
-    <span class="big">⚡</span>
-    Carga un JSON o Excel y define el número de divisiones
-  </div>
-</div>
-
-<script>
-  let clientes = [];
-  let fileBaseName = 'llega_ya';
-  let columnas = [];
-  let formatoDescarga = 'json'; // 'json' | 'xlsx'
-  let descargaIndex = -1;
-  let descargaTodo = false;
-  let rutaIndex = -1;
-
-  const fileInput     = document.getElementById('fileInput');
-  const dropZone      = document.getElementById('dropZone');
-  const fileNameEl    = document.getElementById('fileName');
-  const numDivisions  = document.getElementById('numDivisions');
-  const btnDivide     = document.getElementById('btnDivide');
-  const results       = document.getElementById('results');
-  const alertEl       = document.getElementById('alert');
-  const statTotal     = document.getElementById('statTotal');
-  const statPor       = document.getElementById('statPor');
-  const totalCount    = document.getElementById('totalCount');
-  const porColumna    = document.getElementById('porColumna');
-  const resultsHeader = document.getElementById('resultsHeader');
-  const btnDownloadAll = document.getElementById('btnDownloadAll');
-
-  // ── Drag & Drop ──
-  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
-  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
-  dropZone.addEventListener('drop', e => {
-    e.preventDefault(); dropZone.classList.remove('drag');
-    const file = e.dataTransfer.files[0];
-    if (file) processFile(file);
-  });
-  fileInput.addEventListener('change', () => { if (fileInput.files[0]) processFile(fileInput.files[0]); });
-
-  // ── Procesar archivo ──
-  function processFile(file) {
-    const ext = file.name.split('.').pop().toLowerCase();
-    fileBaseName = file.name.replace(/\.(json|xlsx|xls)$/i, '');
-
-    if (ext === 'json') {
-      readJSON(file);
-    } else if (ext === 'xlsx' || ext === 'xls') {
-      readExcel(file);
-    } else {
-      showAlert('Formato no soportado. Usa JSON, .xlsx o .xls.');
-    }
-  }
-
-  function readJSON(file) {
-    const reader = new FileReader();
-    reader.onload = e => {
-      try {
-        const json = JSON.parse(e.target.result);
-        const keys = Object.keys(json);
-        const key  = keys.find(k => Array.isArray(json[k])) || null;
-        clientes = key ? json[key] : (Array.isArray(json) ? json : []);
-        if (!clientes.length) throw new Error('Sin datos');
-        onFileLoaded(file.name, clientes);
-      } catch {
-        showAlert('Error al leer el JSON. Verifica el formato.');
-        btnDivide.disabled = true;
-      }
-    };
-    reader.readAsText(file);
-  }
-
-  function readExcel(file) {
-    const reader = new FileReader();
-    reader.onload = e => {
-      try {
-        const data = new Uint8Array(e.target.result);
-        const wb   = XLSX.read(data, { type: 'array' });
-        const ws   = wb.Sheets[wb.SheetNames[0]];
-
-        // Leer como array de arrays para detectar fila de encabezados
-        const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
-
-        // Buscar la fila que contiene los encabezados reales
-        let headerRow = 0;
-        for (let i = 0; i < Math.min(raw.length, 5); i++) {
-          const rowStr = raw[i].join('|').toLowerCase();
-          if (rowStr.includes('customer name') || rowStr.includes('code') || rowStr.includes('nombre')) {
-            headerRow = i;
-            break;
-          }
-        }
-
-        const headers = raw[headerRow];
-        const rows = [];
-        for (let i = headerRow + 1; i < raw.length; i++) {
-          if (raw[i].every(cell => cell === '')) continue;
-          const obj = {};
-          headers.forEach((h, idx) => { obj[h] = raw[i][idx] ?? ''; });
-          rows.push(obj);
-        }
-
-        if (!rows.length) throw new Error('Sin datos');
-        clientes = rows;
-        onFileLoaded(file.name, clientes);
-      } catch {
-        showAlert('Error al leer el Excel. Verifica que tenga datos en la primera hoja.');
-        btnDivide.disabled = true;
-      }
-    };
-    reader.readAsArrayBuffer(file);
-  }
-
-  function onFileLoaded(name, data) {
-    fileNameEl.textContent = `✓ ${name} — ${data.length} clientes`;
-    statTotal.style.display = 'flex';
-    totalCount.textContent  = data.length;
-    btnDivide.disabled = false;
-    showAlert('');
-    updatePreview();
-  }
-
-  numDivisions.addEventListener('input', updatePreview);
-
-  function updatePreview() {
-    const n = parseInt(numDivisions.value) || 1;
-    if (!clientes.length) return;
-    const base  = Math.floor(clientes.length / n);
-    const resto = clientes.length % n;
-    porColumna.textContent = resto === 0 ? base : `${base}–${base + 1}`;
-    statPor.style.display = 'flex';
-  }
-
-  btnDivide.addEventListener('click', dividir);
-
-  function dividir() {
-    const n = Math.max(1, parseInt(numDivisions.value) || 1);
-    if (n > clientes.length) {
-      showAlert(`No puedes dividir ${clientes.length} clientes en ${n} columnas. Usa máximo ${clientes.length}.`);
-      return;
-    }
-    showAlert('');
-    columnas = distribuir(clientes, n);
-    renderColumnas(columnas);
-  }
-
-  function distribuir(arr, n) {
-    const base  = Math.floor(arr.length / n);
-    const extra = arr.length % n;
-    const cols  = [];
-    let idx = 0;
-    for (let i = 0; i < n; i++) {
-      const size = base + (i < extra ? 1 : 0);
-      if (size === 0) break;
-      cols.push(arr.slice(idx, idx + size));
-      idx += size;
-    }
-    return cols;
-  }
-
-  function renderColumnas(cols) {
-    resultsHeader.style.display = cols.length ? 'flex' : 'none';
-    if (!cols.length) {
-      results.innerHTML = '<div class="empty"><span class="big">⚡</span>Carga un JSON o Excel y define el número de divisiones</div>';
-      return;
-    }
-    results.innerHTML = '<div class="grid" id="grid"></div>';
-    const grid = document.getElementById('grid');
-    cols.forEach((col, i) => {
-      const card = document.createElement('div');
-      card.className = 'column-card';
-      card.style.animationDelay = `${i * 0.05}s`;
-      const rows = col.map((c, j) => `
-        <div class="cliente-row">
-          <span class="cliente-id">#${c.Code ?? c.id ?? j + 1}</span>
-          <span class="cliente-nombre">${c['Customer name'] ?? c.nombre ?? c.name ?? '—'}</span>
-          <span class="cliente-tel">${c['Dropoff contact'] ?? c.telefono ?? c.phone ?? ''}</span>
-        </div>`).join('');
-      card.innerHTML = `
-        <div class="card-header">
-          <span class="card-title">Columna ${i + 1}</span>
-          <span class="card-badge">${col.length} clientes</span>
+    <div class="container">
+        <h1>🚚 Conversor Excel - Llega Ya</h1>
+        <p class="subtitle">Convierte tu Excel al formato de Supabase</p>
+        
+        <div class="upload-box" onclick="document.getElementById('fileInput').click()" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+            <div class="icon">📊</div>
+            <h3>Arrastra tu archivo Excel aquí</h3>
+            <p>o haz clic para seleccionar</p>
+            <p style="font-size: 0.85em; color: #666; margin-top: 10px;">Formatos: .xlsx, .xls, .csv</p>
         </div>
-        <div class="card-body">${rows}</div>
-        <div class="card-footer">
-          <button class="btn-download" onclick="abrirModalDescarga(${i})">↓ Descargar columna ${i + 1}</button>
-          <button class="btn-download-ruta" onclick="descargarJSONRuta(${i})">⚡ JSON Ruta columna ${i + 1}</button>
-        </div>`;
-      grid.appendChild(card);
-    });
-  }
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" onchange="handleFile(event)">
+        
+        <div id="mappingSection" class="mapping">
+            <h3> Mapeo de Columnas</h3>
+            <p style="color: #666; margin-bottom: 15px; font-size: 0.9em;">La app detectó automáticamente las columnas. Verifica que coincidan:</p>
+            <div class="mapping-grid" id="mappingGrid"></div>
+            <div class="preview" id="preview"></div>
+            <button class="btn" onclick="convertAndDownload()">💾 Descargar CSV para Supabase</button>
+        </div>
+        
+        <div id="successMsg" class="success"></div>
+        <div id="errorMsg" class="error"></div>
+    </div>
 
-  // ── Formato ──
-  function setFormato(fmt) {
-    formatoDescarga = fmt;
-    document.getElementById('fmtJSON').classList.toggle('active', fmt === 'json');
-    document.getElementById('fmtXLSX').classList.toggle('active', fmt === 'xlsx');
-  }
+    <script>
+        let excelData = [];
+        let excelHeaders = [];
+        let columnMapping = {};
 
-  // ── Modal descarga individual ──
-  function abrirModalDescarga(i) {
-    descargaIndex = i;
-    descargaTodo  = false;
-    const inputNombre = document.getElementById('inputNombre');
-    inputNombre.value = `${fileBaseName}_columna_${i + 1}`;
-    document.getElementById('modalRename').classList.add('open');
-    setTimeout(() => inputNombre.select(), 100);
-  }
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) processFile(file);
+        }
 
-  document.getElementById('btnConfirmDl').addEventListener('click', () => {
-    const nombre = document.getElementById('inputNombre').value.trim();
-    if (descargaTodo) {
-      columnas.forEach((_, i) => {
-        setTimeout(() => {
-          const n = nombre ? `${nombre}_${i + 1}` : `${fileBaseName}_columna_${i + 1}`;
-          ejecutarDescarga(i, n);
-        }, i * 350);
-      });
-    } else {
-      const n = nombre || `${fileBaseName}_columna_${descargaIndex + 1}`;
-      ejecutarDescarga(descargaIndex, n);
-    }
-    document.getElementById('modalRename').classList.remove('open');
-  });
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
 
-  document.getElementById('btnCancelRename').addEventListener('click', () => {
-    document.getElementById('modalRename').classList.remove('open');
-  });
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+        }
 
-  document.getElementById('inputNombre').addEventListener('keydown', e => {
-    if (e.key === 'Enter')  document.getElementById('btnConfirmDl').click();
-    if (e.key === 'Escape') document.getElementById('modalRename').classList.remove('open');
-  });
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if (file) processFile(file);
+        }
 
-  // ── Ejecutar descarga según formato ──
-  function ejecutarDescarga(i, nombreFinal) {
-    if (formatoDescarga === 'json') {
-      descargarJSON(i, nombreFinal);
-    } else {
-      descargarXLSX(i, nombreFinal);
-    }
-  }
+        function processFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+                    
+                    // Find header row
+                    let headerRowIndex = 0;
+                    for (let i = 0; i < Math.min(10, jsonData.length); i++) {
+                        const row = jsonData[i];
+                        if (row && row.some(cell => {
+                            const v = String(cell).toLowerCase().trim();
+                            return v.includes('code') || v.includes('name') || v.includes('contact') || v.includes('address');
+                        })) {
+                            headerRowIndex = i;
+                            break;
+                        }
+                    }
+                    
+                    excelHeaders = jsonData[headerRowIndex].map(h => String(h || '').trim());
+                    excelData = jsonData.slice(headerRowIndex + 1).filter(row => row.some(cell => String(cell).trim() !== ''));
+                    
+                    if (excelData.length === 0) {
+                        showError('No se encontraron datos en el archivo');
+                        return;
+                    }
+                    
+                    autoMapColumns();
+                    showMapping();
+                    showSuccess(`✓ ${excelData.length} filas detectadas`);
+                } catch (err) {
+                    showError('Error al leer el archivo: ' + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
 
-  function descargarJSON(i, nombreFinal) {
-    const payload = { clientes: columnas[i] };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    triggerDownload(blob, `${nombreFinal}.json`);
-  }
+        function autoMapColumns() {
+            const mapping = {
+                'tracking_code': ['code', 'tracking', 'order', 'id'],
+                'client_name': ['customer name', 'contact name', 'name', 'client', 'dropoff contact name'],
+                'client_phone': ['dropoff contact', 'phone', 'teléfono', 'telefono', 'contact', 'cell'],
+                'product_info': ['note', 'product', 'descripcion', 'description', 'item', 'producto'],
+                'client_address': ['drop off address', 'dropoff address', 'address', 'direccion', 'delivery'],
+                'price': ['cod', 'price', 'monto', 'amount', 'total', 'precio'],
+                'zone': ['zone', 'zona', 'city', 'ciudad', 'area'],
+                'store': ['pickup', 'store', 'tienda', 'origen', 'warehouse']
+            };
+            
+            const headersLower = excelHeaders.map(h => h.toLowerCase().trim());
+            
+            for (const [supabaseCol, keywords] of Object.entries(mapping)) {
+                for (const keyword of keywords) {
+                    const idx = headersLower.findIndex(h => h.includes(keyword));
+                    if (idx !== -1) {
+                        columnMapping[supabaseCol] = idx;
+                        break;
+                    }
+                }
+            }
+        }
 
-  function descargarXLSX(i, nombreFinal) {
-    // Columnas seleccionadas en orden limpio
-    const COLS = [
-      { key: 'Code',                 label: 'Código',        width: 12 },
-      { key: 'Customer name',        label: 'Cliente',       width: 28 },
-      { key: 'Dropoff Contact Name', label: 'Contacto',      width: 22 },
-      { key: 'Dropoff contact',      label: 'Teléfono',      width: 16 },
-      { key: 'Drop off address',     label: 'Dirección',     width: 40 },
-      { key: 'Zone',                 label: 'Zona',          width: 18 },
-      { key: 'COD',                  label: 'COD',           width: 10 },
-      { key: 'Reference Id',         label: 'Referencia',    width: 20 },
-      { key: 'Note',                 label: 'Nota',          width: 30 },
-    ];
+        function showMapping() {
+            const grid = document.getElementById('mappingGrid');
+            const labels = {
+                'tracking_code': '📦 Código de seguimiento',
+                'client_name': '👤 Nombre del cliente',
+                'client_phone': ' Teléfono',
+                'product_info': '📝 Producto/Nota',
+                'client_address': '📍 Dirección de entrega',
+                'price': '💵 Precio/COD',
+                'zone': ' Zona',
+                'store': ' Tienda/Origen'
+            };
+            
+            let html = '';
+            for (const [supabaseCol, label] of Object.entries(labels)) {
+                const currentMapping = columnMapping[supabaseCol] !== undefined ? columnMapping[supabaseCol] : '';
+                html += `
+                    <div class="mapping-item">
+                        <label>${label}</label>
+                        <select id="map_${supabaseCol}" onchange="columnMapping['${supabaseCol}'] = this.value">
+                            <option value="">-- No asignar --</option>
+                            ${excelHeaders.map((h, i) => `
+                                <option value="${i}" ${currentMapping == i ? 'selected' : ''}>${h || 'Columna ' + (i+1)}</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                `;
+            }
+            grid.innerHTML = html;
+            
+            // Show preview
+            showPreview();
+            document.getElementById('mappingSection').classList.add('show');
+        }
 
-    const data = columnas[i];
+        function showPreview() {
+            const preview = document.getElementById('preview');
+            const requiredFields = ['tracking_code', 'client_name', 'client_phone', 'product_info'];
+            const missingRequired = requiredFields.filter(f => columnMapping[f] === undefined || columnMapping[f] === '');
+            
+            if (missingRequired.length > 0) {
+                preview.innerHTML = `<div style="padding: 15px; background: #FFEBEE; color: #C62828; border-radius: 8px;">
+                    <strong>⚠️ Faltan columnas requeridas:</strong><br>
+                    ${missingRequired.map(f => '• ' + f).join('<br>')}
+                </div>`;
+                return;
+            }
+            
+            let html = '<table><thead><tr>';
+            html += Object.keys(columnMapping).filter(k => columnMapping[k] !== undefined && columnMapping[k] !== '').map(k => `<th>${k}</th>`).join('');
+            html += '</tr></thead><tbody>';
+            
+            excelData.slice(0, 5).forEach(row => {
+                html += '<tr>';
+                for (const [supabaseCol, colIndex] of Object.entries(columnMapping)) {
+                    if (colIndex !== undefined && colIndex !== '') {
+                        html += `<td>${row[colIndex] || ''}</td>`;
+                    }
+                }
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            
+            if (excelData.length > 5) {
+                html += `<div style="padding: 10px; text-align: center; color: #666; font-size: 0.85em;">... y ${excelData.length - 5} filas más</div>`;
+            }
+            
+            preview.innerHTML = html;
+        }
 
-    // Encabezados con estilo
-    const headerRow = {};
-    COLS.forEach(c => { headerRow[c.label] = c.label; });
+        function convertAndDownload() {
+            const requiredFields = ['tracking_code', 'client_name', 'client_phone', 'product_info'];
+            const missingRequired = requiredFields.filter(f => columnMapping[f] === undefined || columnMapping[f] === '');
+            
+            if (missingRequired.length > 0) {
+                showError('Debes mapear las columnas requeridas: ' + missingRequired.join(', '));
+                return;
+            }
+            
+            const csvRows = [];
+            const headers = Object.keys(columnMapping).filter(k => columnMapping[k] !== undefined && columnMapping[k] !== '');
+            csvRows.push(headers.join(','));
+            
+            excelData.forEach(row => {
+                const values = headers.map(header => {
+                    const colIndex = columnMapping[header];
+                    let value = row[colIndex] || '';
+                    value = String(value).replace(/"/g, '""');
+                    if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+                        value = `"${value}"`;
+                    }
+                    return value;
+                });
+                csvRows.push(values.join(','));
+            });
+            
+            const csvContent = csvRows.join('\n');
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'llega_ya_import_' + new Date().toISOString().split('T')[0] + '.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showSuccess('✅ Archivo CSV descargado. Ahora impórtalo en Supabase.');
+        }
 
-    // Filas de datos usando labels como claves
-    const rows = data.map(row => {
-      const out = {};
-      COLS.forEach(c => { out[c.label] = row[c.key] ?? ''; });
-      return out;
-    });
+        function showSuccess(msg) {
+            const el = document.getElementById('successMsg');
+            el.textContent = msg;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 5000);
+        }
 
-    const ws = XLSX.utils.json_to_sheet(rows);
-
-    // Ancho de columnas
-    ws['!cols'] = COLS.map(c => ({ wch: c.width }));
-
-    // Estilo de encabezado (negrita + fondo)
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let C = range.s.c; C <= range.e.c; C++) {
-      const cell = ws[XLSX.utils.encode_cell({ r: 0, c: C })];
-      if (cell) {
-        cell.s = {
-          font: { bold: true, color: { rgb: '000000' } },
-          fill: { fgColor: { rgb: 'E8FF47' } },
-          alignment: { horizontal: 'center', vertical: 'center' },
-          border: {
-            bottom: { style: 'thin', color: { rgb: '999999' } }
-          }
-        };
-      }
-    }
-
-    // Altura de la fila de encabezado
-    ws['!rows'] = [{ hpt: 20 }];
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Clientes');
-    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array', cellStyles: true });
-    const blob  = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    triggerDownload(blob, `${nombreFinal}.xlsx`);
-  }
-
-  function triggerDownload(blob, filename) {
-    const url = URL.createObjectURL(blob);
-    const a   = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
-  }
-
-  // ── Descargar todo ──
-  btnDownloadAll.addEventListener('click', () => {
-    descargaTodo = true;
-    const inputNombre = document.getElementById('inputNombre');
-    inputNombre.value = fileBaseName;
-    document.getElementById('modalRename').classList.add('open');
-    setTimeout(() => inputNombre.select(), 100);
-  });
-
-  // ── Construir JSON Ruta ──
-  function buildJSONRuta(col, index) {
-    const hoy = new Date();
-    const fecha = hoy.toISOString().split('T')[0];
-
-    // Detectar zona del primer cliente
-    const zonaDetectada = col[0]?.Zone ?? col[0]?.zona ?? 'San Francisco';
-
-    const clientes = col.map((c, j) => {
-      const telRaw = String(c['Dropoff contact'] ?? c.telefono ?? c.phone ?? '').replace(/\D/g, '');
-      const tel = telRaw && !telRaw.startsWith('1') ? '1' + telRaw : telRaw;
-      return {
-        id: c.Code ?? c.id ?? j + 1,
-        nombre: c['Dropoff Contact Name'] ?? c['Customer name'] ?? c.nombre ?? c.name ?? '—',
-        telefono: tel,
-        whatsapp: tel ? `https://wa.me/${tel}` : null,
-        lat: null,
-        lng: null,
-        cod: Number(c.COD ?? c.cod ?? 0),
-        nota: c['Note'] || c['Reference Id'] || c.nota || null,
-        estado: 'pendiente'
-      };
-    });
-
-    return {
-      fecha,
-      zona: zonaDetectada,
-      punto_salida: {
-        nombre: 'Llega Ya - Sanchez casa 9A',
-        lat: 19.2917,
-        lng: -70.2558
-      },
-      clientes
-    };
-  }
-
-  function descargarJSONRuta(i) {
-    rutaIndex = i;
-    const inputNombre = document.getElementById('inputNombreRuta');
-    inputNombre.value = `${fileBaseName}_ruta_columna_${i + 1}`;
-    document.getElementById('modalRuta').classList.add('open');
-    setTimeout(() => inputNombre.select(), 100);
-  }
-
-  document.getElementById('btnDownloadAllRuta').addEventListener('click', () => {
-    columnas.forEach((_, i) => {
-      setTimeout(() => descargarJSONRuta(i), i * 350);
-    });
-  });
-
-  // ── Modal JSON Ruta listeners ──
-  document.getElementById('btnConfirmRuta').addEventListener('click', () => {
-    const nombre = document.getElementById('inputNombreRuta').value.trim() || `${fileBaseName}_ruta_columna_${rutaIndex + 1}`;
-    const payload = buildJSONRuta(columnas[rutaIndex], rutaIndex);
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    triggerDownload(blob, `${nombre}.json`);
-    document.getElementById('modalRuta').classList.remove('open');
-  });
-
-  document.getElementById('btnCancelRuta').addEventListener('click', () => {
-    document.getElementById('modalRuta').classList.remove('open');
-  });
-
-  document.getElementById('inputNombreRuta').addEventListener('keydown', e => {
-    if (e.key === 'Enter')  document.getElementById('btnConfirmRuta').click();
-    if (e.key === 'Escape') document.getElementById('modalRuta').classList.remove('open');
-  });
-
-  document.getElementById('modalRuta').addEventListener('click', e => {
-    if (e.target === document.getElementById('modalRuta')) document.getElementById('modalRuta').classList.remove('open');
-  });
-
-  function showAlert(msg) {
-    alertEl.textContent = msg;
-    alertEl.style.display = msg ? 'block' : 'none';
-  }
-
-  // ── Reset ──
-  const btnReset       = document.getElementById('btnReset');
-  const modalOverlay   = document.getElementById('modalOverlay');
-  const btnCancel      = document.getElementById('btnCancel');
-  const btnConfirmReset = document.getElementById('btnConfirmReset');
-
-  btnReset.addEventListener('click', () => modalOverlay.classList.add('open'));
-  btnCancel.addEventListener('click', () => modalOverlay.classList.remove('open'));
-  modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) modalOverlay.classList.remove('open'); });
-
-  btnConfirmReset.addEventListener('click', () => {
-    clientes = []; columnas = []; fileBaseName = 'llega_ya';
-    fileInput.value = ''; fileNameEl.textContent = '';
-    numDivisions.value = 2;
-    statTotal.style.display = 'none'; statPor.style.display = 'none';
-    totalCount.textContent = '0'; porColumna.textContent = '—';
-    btnDivide.disabled = true; resultsHeader.style.display = 'none';
-    showAlert('');
-    results.innerHTML = '<div class="empty"><span class="big">⚡</span>Carga un JSON o Excel y define el número de divisiones</div>';
-    modalOverlay.classList.remove('open');
-  });
-</script>
-
+        function showError(msg) {
+            const el = document.getElementById('errorMsg');
+            el.textContent = msg;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 5000);
+        }
+    </script>
 </body>
 </html>
